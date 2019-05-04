@@ -1,2 +1,5 @@
 # EmeraldScript
 :gem:
+
+## License
+MIT
