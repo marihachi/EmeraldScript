@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "node ."
+    "start": "node .",
+    "build": "mkdirp ./built/lang && pegjs -o built/lang/main.js src/lang/main.pegjs"
   },
   "repository": {
     "type": "git",
@@ -14,5 +15,9 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/marihachi/EmeraldScript/issues"
+  },
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "pegjs": "^0.10.0"
   }
 }
