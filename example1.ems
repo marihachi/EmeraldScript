@@ -1,4 +1,6 @@
-#name piyo
 #title hoge
+#name piyo
 
-var a: Text = "";
+var a: Text = "hoge";
+var b: Number = 123;
+var c: Ref = a;

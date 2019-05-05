@@ -10,28 +10,60 @@ start = meta:defineMetaPart vars:defineVarPart {
 
 breakLine = [\r\n]
 space = [ \t]
-splitter = breakLine / space
+delimit = breakLine / space
 
-defineMetaPart = items:(defineMetaName / defineMetaTitle / splitter)* {
+//
+// meta
+//
+
+defineMetaPart = items:(defineMetaName / defineMetaTitle / delimit)* {
 	return items.filter(el => typeof el == 'object');
 }
 
-defineMetaName = "#name" splitter+ nameChars:(!([\t\r\n]) .)+ breakLine {
+defineMetaName = "#name" delimit+ nameChars:(!([\t\r\n]) .)+ breakLine {
 	return { type: 'name', value: nameChars.map(el => el[1]).join('') };
 }
 
-defineMetaTitle = "#title" splitter+ titleChars:(!([\t\r\n]) .)+ breakLine {
+defineMetaTitle = "#title" delimit+ titleChars:(!([\t\r\n]) .)+ breakLine {
 	return { type: 'title', value: titleChars.map(el => el[1]).join('') };
 }
 
-defineVarPart = items:(defineTextVar / splitter)* {
+//
+// variable
+//
+
+defineVarPart = items:(defineTextVar / defineNumberVar / defineRefVar / delimit)* {
 	return items.filter(el => typeof el == 'object');
 }
 
-defineTextVar = "var" splitter+ varNameChars:(![\n\t:] .)+ splitter* [:] splitter* "Text" splitter* "=" splitter* ["] valueChars:(!["\r\n] .)* ["] ";" {
+defineVarNameChar = ![\r\n\t:] char:. { return char; }
+defineVarName = chars:defineVarNameChar+ { return chars.join(''); }
+textLiteralChar = ![\r\n\t"] char:. { return char; }
+textLiteral = ["] chars:textLiteralChar* ["] { return chars.join(''); }
+numberLiteral = first:[1-9] seconds:[0-9]* { return first + seconds.join(''); }
+refLiteralChar = ![\r\n\t;] char:. { return char; }
+refLiteral = chars:refLiteralChar+ { return chars.join(''); }
+
+defineTextVar = "var" delimit+ name:defineVarName delimit* [:] delimit* "Text" delimit* "=" delimit* value:textLiteral ";" {
 	return {
 		type: 'text',
-		name: varNameChars.map(el => el[1]).join(''),
-		value: valueChars.map(el => el[1]).join('')
+		name: name,
+		value: value
+	};
+}
+
+defineNumberVar = "var" delimit+ name:defineVarName delimit* [:] delimit* "Number" delimit* "=" delimit* value:numberLiteral ";" {
+	return {
+		type: 'number',
+		name: name,
+		value: value
+	};
+}
+
+defineRefVar = "var" delimit+ name:defineVarName delimit* [:] delimit* "Ref" delimit* "=" delimit* value:refLiteral ";" {
+	return {
+		type: 'ref',
+		name: name,
+		value: value
 	};
 }
