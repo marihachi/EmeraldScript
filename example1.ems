@@ -1,0 +1,4 @@
+#name piyo
+#title hoge
+
+var a: Text = "";
