@@ -11,6 +11,7 @@ start = meta:defineMetaPart vars:defineVarPart {
 breakLine = [\r\n]
 space = [ \t]
 delimit = breakLine / space
+symbol = [!-/:-@[-`{-~]
 
 //
 // meta
@@ -20,11 +21,11 @@ defineMetaPart = items:(defineMetaName / defineMetaTitle / delimit)* {
 	return items.filter(el => typeof el == 'object');
 }
 
-defineMetaName = "#name" delimit+ nameChars:(!([\t\r\n]) .)+ breakLine {
+defineMetaName = "#name" delimit+ nameChars:(!delimit .)+ breakLine {
 	return { type: 'name', value: nameChars.map(el => el[1]).join('') };
 }
 
-defineMetaTitle = "#title" delimit+ titleChars:(!([\t\r\n]) .)+ breakLine {
+defineMetaTitle = "#title" delimit+ titleChars:(!delimit .)+ breakLine {
 	return { type: 'title', value: titleChars.map(el => el[1]).join('') };
 }
 
@@ -32,38 +33,60 @@ defineMetaTitle = "#title" delimit+ titleChars:(!([\t\r\n]) .)+ breakLine {
 // variable
 //
 
-defineVarPart = items:(defineTextVar / defineNumberVar / defineRefVar / delimit)* {
+defineVarPart = items:(defineVar / delimit)* {
 	return items.filter(el => typeof el == 'object');
 }
 
-defineVarNameChar = ![\r\n\t:] char:. { return char; }
-defineVarName = chars:defineVarNameChar+ { return chars.join(''); }
-textLiteralChar = ![\r\n\t"] char:. { return char; }
-textLiteral = ["] chars:textLiteralChar* ["] { return chars.join(''); }
-numberLiteral = first:[1-9] seconds:[0-9]* { return first + seconds.join(''); }
-refLiteralChar = ![\r\n\t;] char:. { return char; }
-refLiteral = chars:refLiteralChar+ { return chars.join(''); }
+typeName = type:("Text" / "Number" / "Ref")
 
-defineTextVar = "var" delimit+ name:defineVarName delimit* [:] delimit* "Text" delimit* "=" delimit* value:textLiteral ";" {
+textLiteralChar = !(delimit / ["]) char:. { return char; }
+textLiteral = ["] chars:textLiteralChar* ["] {
 	return {
-		type: 'text',
-		name: name,
-		value: value
+		tokenType: 'textLiteral',
+		value: chars.join('')
 	};
 }
 
-defineNumberVar = "var" delimit+ name:defineVarName delimit* [:] delimit* "Number" delimit* "=" delimit* value:numberLiteral ";" {
+numberLiteral = first:[1-9] seconds:[0-9]* {
 	return {
-		type: 'number',
-		name: name,
-		value: value
+		tokenType: 'numberLiteral',
+		value: first + seconds.join('')
 	};
 }
 
-defineRefVar = "var" delimit+ name:defineVarName delimit* [:] delimit* "Ref" delimit* "=" delimit* value:refLiteral ";" {
+identifierChar = !(delimit / symbol) char:. { return char; }
+identifier = chars:identifierChar+ {
 	return {
-		type: 'ref',
-		name: name,
-		value: value
+		tokenType: 'identifier',
+		value: chars.join('')
 	};
+}
+
+assignValue = textLiteral / numberLiteral / identifier
+
+defineVar = "var" delimit+ name:identifier delimit* [:] delimit* type:typeName delimit* [=] delimit* valueToken:assignValue ";" {
+	if (type == 'Text') {
+		if (valueToken.tokenType != 'textLiteral') throw new SyntaxError('assign type error');
+		return {
+			type: 'text',
+			name: name.value,
+			value: valueToken.value
+		};
+	}
+	else if (type == 'Number') {
+		if (valueToken.tokenType != 'numberLiteral') throw new SyntaxError('assign type error');
+		return {
+			type: 'number',
+			name: name.value,
+			value: valueToken.value
+		};
+	}
+	else if (type == 'Ref') {
+		if (valueToken.tokenType != 'identifier') throw new SyntaxError('assign type error');
+		return {
+			type: 'ref',
+			name: name.value,
+			value: valueToken.value
+		};
+	}
 }
