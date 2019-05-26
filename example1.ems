@@ -4,3 +4,17 @@
 var a: Text = "hoge";
 var b: Number = 123;
 var c: Ref = a;
+
+<section title="a">
+	<text>
+		hoge
+		<center>yeah</center>
+		piyo
+	</text>
+</section>
+
+<text>
+	abc
+	<center>foo</center>
+	123
+</text>
