@@ -1,6 +1,6 @@
 import uuid from 'uuid';
 
-interface PegParser {
+interface EmsInternalParser {
 	SyntaxError: any;
 	parse: (input: string, options?: {[x: string]: any}) => any;
 }
@@ -83,18 +83,18 @@ interface AisAstTextBlock extends AisAstBlock {
 }
 
 
-export class EmsParser {
-	pegParser: PegParser;
+export default class EmsParser {
+	internalParser: EmsInternalParser;
 
-	constructor(pegParser: PegParser) {
-		this.pegParser = pegParser;
+	constructor() {
+		this.internalParser = require('./peg/EmsInternalParser.js');
 	}
 
 	parse(inputCode: string): AisAst {
 
 		// # generate EmeraldScript AST
 
-		const ast: EmsAst = this.pegParser.parse(inputCode, { });
+		const ast: EmsAst = this.internalParser.parse(inputCode, { });
 
 		// # parse semantics
 

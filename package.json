@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "build-debug": "mkdirp ./built/lang && pegjs -o built/lang/main.js --trace src/lang/main.pegjs",
-    "build": "mkdirp ./built/lang && pegjs -o built/lang/main.js src/lang/main.pegjs",
-    "init": "node src/init.js",
-    "start": "node src/main.js",
-    "create": "node src/create-page.js"
+    "build-debug": "mkdirp ./built/parser/peg && pegjs -o built/parser/peg/EmsInternalParser.js --trace src/parser/peg/EmsInternalParser.pegjs",
+    "build": "mkdirp ./built/parser/peg && pegjs -o built/parser/peg/EmsInternalParser.js src/parser/peg/EmsInternalParser.pegjs",
+    "ts": "tsc",
+    "init": "node built/init.js",
+    "login": "node built/login.js",
+    "publish": "node built/publish.js"
   },
   "repository": {
     "type": "git",
@@ -19,9 +20,13 @@
     "url": "https://github.com/marihachi/EmeraldScript/issues"
   },
   "dependencies": {
+    "@types/node": "^12.0.3",
+    "@types/uuid": "^3.4.4",
+    "corekey": "^1.0.0-beta.6",
     "mkdirp": "^0.5.1",
-    "node-fetch": "^2.5.0",
+    "node-fetch": "^2.6.0",
     "pegjs": "^0.10.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "uuid": "^3.3.2"
   }
 }
