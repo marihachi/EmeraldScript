@@ -16,7 +16,7 @@ metaTypeChar = !(lineBreak / space) c:. { return c; }
 metaContentChar = !(lineBreak) c:. { return c; }
 
 defineMeta = "#" type:$(metaTypeChar+) space+ content:$(metaContentChar+) {
-	return { metaType: type, value: content };
+	return { metaType: type.toLowerCase(), value: content };
 }
 
 defineMetaPart
@@ -51,7 +51,7 @@ varDefTypeChar = !(lineBreak / space / "=") c:. { return c; }
 
 defineVar
 	= "var"i spacing+ name:$(varDefIdChar+) spacing* ":" spacing* type:$(varDefTypeChar+) spacing* "=" spacing* expr:varExpression ";" {
-	return { name: name, varType: type, value: expr };
+	return { name: name, varType: type.toLowerCase(), value: expr };
 }
 
 defineVarPart
