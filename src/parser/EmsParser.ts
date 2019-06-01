@@ -21,6 +21,11 @@ interface EmsAstMeta {
 interface EmsAstVar {
 	name: string;
 	varType: string;
+	value: EmsAstVarExpr;
+}
+
+interface EmsAstVarExpr {
+	exprType: string;
 	value: string;
 }
 
@@ -103,21 +108,59 @@ export default class EmsParser {
 		const requiredMetaTypes = ['title', 'name'];
 		const usableMetaTypes = [...requiredMetaTypes];
 		for (const meta of ast.metas) {
-			if (usableMetaTypes.indexOf(meta.metaType) == -1) {
+			if (!usableMetaTypes.some(i => i == meta.metaType)) {
 				throw new Error(`invalid meta type: ${meta.metaType}`);
 			}
 		}
 		for (const requiredMetaType of requiredMetaTypes) {
-			if (ast.metas.findIndex(i => i.metaType == requiredMetaType) == -1) {
+			if (!ast.metas.some(i => i.metaType == requiredMetaType)) {
 				throw new Error(`metadata ${requiredMetaType} is required`);
 			}
 		}
 
 		// var
 
-		if (ast.vars.length != 0) {
-			// not supported yet
-			throw new Error('feature-not-supported: define variables');
+		// if (ast.vars.length != 0) {
+		// 	// not supported yet
+		// 	throw new Error('feature-not-supported: define variables');
+		// }
+
+		var usableVariableTypes = ['text', 'number', 'Ref'];
+
+		var definedVariables: EmsAstVar[] = [];
+
+		for (const variable of ast.vars) {
+			if (!usableVariableTypes.some(i => i == variable.varType)) {
+				throw new Error(`var type '${variable.varType}' is not supported`);
+			}
+
+			// check type of assigned expression. if invalid, occurs error.
+
+			if (variable.varType == 'text') {
+				// occurs error if right side and left side is not compatible type
+				if (variable.value.exprType != 'text') {
+					throw new Error(`right side and left side is not compatible type (varType=text, exprType=${variable.value.exprType})`);
+				}
+			}
+			if (variable.varType == 'number') {
+				// occurs error if right side and left side is not compatible type
+				if (variable.value.exprType != 'number') {
+					throw new Error(`right side and left side is not compatible type (varType=number, exprType=${variable.value.exprType})`);
+				}
+			}
+			if (variable.varType == 'ref') {
+				// occurs error if right side and left side is not compatible type
+				if (variable.value.exprType != 'identifier') {
+					throw new Error(`right side and left side is not compatible type (varType=ref, exprType=${variable.value.exprType})`);
+				}
+
+				// occurs error if undefined
+				if (!definedVariables.some(i => i.value.value == variable.value.value)) {
+					throw new Error(`variable '${variable.value.value}' is not defined`);
+				}
+			}
+
+			definedVariables.push(variable);
 		}
 
 		// block
