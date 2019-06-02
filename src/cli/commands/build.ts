@@ -43,4 +43,7 @@ export default async function(args: string[])
 	const emsParser = new EmsParser();
 	const aisAst = emsParser.parse(scriptData);
 	await writeFile(outputFile, JSON.stringify(aisAst));
+
+	console.log('An AiScript file has been generated:'); 
+	console.log(outputFile); 
 }
