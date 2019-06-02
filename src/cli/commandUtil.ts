@@ -19,9 +19,6 @@ export function showHelp(command?: string)
 	if (command == 'build') {
 		console.log('Usage: em build <inputFile> [<outputFile>]');
 	}
-	else if (command == 'init') {
-		console.log('Usage: em init');
-	}
 	else if (command == 'login') {
 		console.log('Usage: em login');
 	}

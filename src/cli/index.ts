@@ -3,7 +3,6 @@
 import { showHelp, showVersion } from './commandUtil';
 import build from './commands/build';
 import publish from './commands/publish';
-import init from './commands/init';
 import login from './commands/login';
 
 async function entryPoint() {
@@ -23,9 +22,6 @@ async function entryPoint() {
 
 	if (args[0] == 'build') {
 		build(args.slice(1));
-	}
-	else if (args[0] == 'init') {
-		init(args.slice(1));
 	}
 	else if (args[0] == 'login') {
 		login(args.slice(1));
