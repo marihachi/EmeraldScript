@@ -27,7 +27,7 @@ $ em login
 $ em build scriptFile.ems scriptFile.ai.json
 ```
 
-### 3. Publishes the page to Misskey
+### 3. Publish the page to Misskey
 ```
 $ em publish scriptFile.ai.json
 ```
