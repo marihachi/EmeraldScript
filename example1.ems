@@ -1,20 +1,23 @@
-#title hoge
-#name piyo
+#name EmeraldScriptTest02
+#title Emerald Script Test - 02
 
-var a: Text = "hoge";
-var b: Number = 123;
-var c: Ref = a;
+var name: Text = "user1";
+var num1: Number = 1;
+var nameRef: Ref = name;
 
-<section title="a">
+<section title="hello">
 	<text>
-		hoge
-		<center>yeah</center>
-		piyo
+		hi {nameRef}
 	</text>
 </section>
 
-<text>
-	abc
-	<center>foo</center>
-	123
-</text>
+<section title="abc">
+	<text>
+		yeah
+	</text>
+	<text>
+		number: {num1}
+	</text>
+</section>
+
+

@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "build-debug": "mkdirp ./built/parser/peg && pegjs -o built/parser/peg/EmsInternalParser.js --trace src/parser/peg/EmsInternalParser.pegjs",
-    "build": "mkdirp ./built/parser/peg && pegjs -o built/parser/peg/EmsInternalParser.js src/parser/peg/EmsInternalParser.pegjs",
-    "ts": "tsc",
-    "init": "node built/init.js",
-    "login": "node built/login.js",
-    "publish": "node built/publish.js"
+    "build": "npm run peg && npm run tsc",
+    "build-debug": "npm run peg-debug && npm run tsc",
+    "peg": "mkdirp ./built/parser/peg && pegjs -o built/parser/peg/EmsInternalParser.js src/parser/peg/EmsInternalParser.pegjs",
+    "peg-debug": "mkdirp ./built/parser/peg && pegjs -o built/parser/peg/EmsInternalParser.js --trace src/parser/peg/EmsInternalParser.pegjs",
+    "tsc": "tsc"
+  },
+  "bin": {
+    "em": "./built/cli/index.js"
   },
   "repository": {
     "type": "git",

@@ -87,6 +87,13 @@ interface AisAstTextBlock extends AisAstBlock {
 	text: string;
 }
 
+interface AisAstVar {
+	id: string;
+	type: string;
+	name: string;
+	value: string;
+}
+
 
 export default class EmsParser {
 	internalParser: EmsInternalParser;
@@ -125,7 +132,7 @@ export default class EmsParser {
 		// 	throw new Error('feature-not-supported: define variables');
 		// }
 
-		var usableVariableTypes = ['text', 'number', 'Ref'];
+		var usableVariableTypes = ['text', 'number', 'ref'];
 
 		var definedVariables: EmsAstVar[] = [];
 
@@ -155,7 +162,7 @@ export default class EmsParser {
 				}
 
 				// occurs error if undefined
-				if (!definedVariables.some(i => i.value.value == variable.value.value)) {
+				if (!definedVariables.some(i => i.name == variable.value.value)) {
 					throw new Error(`variable '${variable.value.value}' is not defined`);
 				}
 			}
@@ -245,11 +252,24 @@ export default class EmsParser {
 		const blocks: AisAstBlock[] = [];
 		transformBlocks(emsAst.blocks, blocks);
 
+		function transformVars(src: EmsAstVar[], dest: AisAstVar[]) {
+			for (const variable of src) {
+				vars.push({
+					id: uuid.v4(),
+					type: variable.varType,
+					value: variable.value.value,
+					name: variable.name
+				});
+			}
+		}
+		const vars: AisAstVar[] = [];
+		transformVars(emsAst.vars, vars);
+
 		return {
 			name: name!.value,
 			title: title!.value,
 			content: blocks,
-			variables: [] // not supported yet
+			variables: vars
 		};
 	}
 }
