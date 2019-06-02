@@ -21,13 +21,13 @@ async function entryPoint() {
 	}
 
 	if (args[0] == 'build') {
-		build(args.slice(1));
+		await build(args.slice(1));
 	}
 	else if (args[0] == 'login') {
-		login(args.slice(1));
+		await login(args.slice(1));
 	}
 	else if (args[0] == 'publish') {
-		publish(args.slice(1));
+		await publish(args.slice(1));
 	}
 	else {
 		showHelp();
