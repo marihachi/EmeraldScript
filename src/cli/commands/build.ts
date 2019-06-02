@@ -39,10 +39,23 @@ export default async function(args: string[])
 		outputFile = path.resolve(outputFile);
 	}
 
-	const scriptData = await readFile(inputFile, { encoding: 'utf8' });
+	let scriptData;
+	try {
+		scriptData = await readFile(inputFile, { encoding: 'utf8' });
+	}
+	catch (err) {
+		throw 'failed to open the input file';
+	}
+
 	const emsParser = new EmsParser();
 	const aisAst = emsParser.parse(scriptData);
-	await writeFile(outputFile, JSON.stringify(aisAst));
+
+	try {
+		await writeFile(outputFile, JSON.stringify(aisAst));
+	}
+	catch (err) {
+		throw 'failed to generate the AiScript file';
+	}
 
 	console.log('An AiScript file has been generated:'); 
 	console.log(outputFile); 

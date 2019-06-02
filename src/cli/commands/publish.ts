@@ -32,14 +32,19 @@ export default async function(args: string[])
 	}
 
 	if (!config || !config.account) {
-		console.log('login is required');
-		return;
+		throw 'login is required';
 	}
 
 	const app = new App(config.account.host, config.account.secret);
 	const account = new Account(app, config.account.userToken);
 
-	const aiastJson = await readFile(inputFile, { encoding: 'utf8' });
+	let aiastJson;
+	try {
+		aiastJson = await readFile(inputFile, { encoding: 'utf8' });
+	}
+	catch (err) {
+		throw 'failed to open the input file';
+	}
 	
 	let aiast: any;
 	try {
@@ -49,13 +54,20 @@ export default async function(args: string[])
 	}
 
 	if (!aiast || !aiast.content || !aiast.variables) {
-		console.log('the input file is invalid format');
-		return;
+		throw 'the input file is invalid format';
 	}
 
 	const page = await account.request('pages/create', aiast);
 
-	console.log('The page has been created.');
+	if (page.error) {
+		if (page.error.kind == 'server' && page.error.info) {
+			console.log(JSON.stringify(page.error.info));
+		}
+
+		throw `failed to create the page (error: ${page.error.message})`;
+	}
+
+	console.log('The page has been created');
 	console.log(`page id: ${page.id}`);
 	console.log(`page url: https://${config.account.host}/@${page.user.username}/pages/${page.name}`);
 }
