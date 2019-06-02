@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
-import { showHelp } from '../commandUtil';
-import Config from '../Config';
+import { showHelp } from '../misc/commandUtil';
+import Config from '../misc/Config';
 
 import {
 	App,
@@ -21,12 +21,12 @@ export default async function(args: string[])
 
 	let inputFile = args[0];
 	if (!path.isAbsolute(inputFile)) {
-		inputFile = path.resolve(process.cwd(), inputFile);
+		inputFile = path.resolve(inputFile);
 	}
 
 	let config: Config | undefined;
 	try {
-		config = require(path.resolve(process.cwd(), './config.json'));
+		config = require(path.resolve('./.em/setting.json'));
 	}
 	catch (err) {
 	}

@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
 import EmsParser from '../../parser/EmsParser';
-import { showHelp } from '../commandUtil';
+import { showHelp } from '../misc/commandUtil';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -17,7 +17,7 @@ export default async function(args: string[])
 
 	let inputFile = args[0];
 	if (!path.isAbsolute(inputFile)) {
-		inputFile = path.resolve(process.cwd(), inputFile);
+		inputFile = path.resolve(inputFile);
 	}
 
 	let outputFile;
@@ -36,7 +36,7 @@ export default async function(args: string[])
 		outputFile = path.join(inputDir, `${fileNameWithoutExt}.ai.json`);
 	}
 	if (!path.isAbsolute(outputFile)) {
-		outputFile = path.resolve(process.cwd(), outputFile);
+		outputFile = path.resolve(outputFile);
 	}
 
 	const scriptData = await readFile(inputFile, { encoding: 'utf8' });

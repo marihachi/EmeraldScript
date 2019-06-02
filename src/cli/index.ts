@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-import { showHelp, showVersion } from './commandUtil';
+import { showHelp, showVersion } from './misc/commandUtil';
 import build from './commands/build';
 import publish from './commands/publish';
 import login from './commands/login';

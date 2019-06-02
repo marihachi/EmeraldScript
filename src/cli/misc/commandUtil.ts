@@ -1,5 +1,6 @@
 import path from 'path';
-const packageInfo: any = require(path.resolve('./package.json'));
+
+const packageInfo: any = require(path.join(__dirname, '../../../package.json'));
 
 export function showVersion()
 {
