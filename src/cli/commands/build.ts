@@ -33,7 +33,7 @@ export default async function(args: string[])
 		}
 		const fileNameWithoutExt = fileNameSplited.join('.');
 
-		outputFile = path.join(inputDir, `${fileNameWithoutExt}.aiast`);
+		outputFile = path.join(inputDir, `${fileNameWithoutExt}.ai.json`);
 	}
 	if (!path.isAbsolute(outputFile)) {
 		outputFile = path.resolve(process.cwd(), outputFile);
