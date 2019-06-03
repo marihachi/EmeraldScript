@@ -94,146 +94,164 @@ interface AisAstVar {
 	value: string;
 }
 
+//
+// meta
+//
 
-export default class EmsParser {
+const requiredMetaTypes = ['title', 'name'];
+const usableMetaTypes = [...requiredMetaTypes];
+
+function validateMetas(metas: EmsAstMeta[])
+{
+	for (const meta of metas) {
+		if (!usableMetaTypes.some(i => i == meta.metaType)) {
+			throw new Error(`invalid meta type: ${meta.metaType}`);
+		}
+	}
+	for (const requiredMetaType of requiredMetaTypes) {
+		if (!metas.some(i => i.metaType == requiredMetaType)) {
+			throw new Error(`metadata ${requiredMetaType} is required`);
+		}
+	}
+}
+
+//
+// variable
+//
+
+var usableVariableTypes = ['text', 'number', 'ref'];
+
+var definedVariables: EmsAstVar[] = [];
+
+function validateVariables(vars: EmsAstVar[])
+{
+	for (const variable of vars) {
+		if (!usableVariableTypes.some(i => i == variable.varType)) {
+			throw new Error(`var type '${variable.varType}' is not supported`);
+		}
+
+		// check type of assigned expression. if invalid, occurs error.
+
+		if (variable.varType == 'text') {
+			// occurs error if right side and left side is not compatible type
+			if (variable.value.exprType != 'text') {
+				throw new Error(`right side and left side is not compatible type (varType=text, exprType=${variable.value.exprType})`);
+			}
+		}
+		if (variable.varType == 'number') {
+			// occurs error if right side and left side is not compatible type
+			if (variable.value.exprType != 'number') {
+				throw new Error(`right side and left side is not compatible type (varType=number, exprType=${variable.value.exprType})`);
+			}
+		}
+		if (variable.varType == 'ref') {
+			// occurs error if right side and left side is not compatible type
+			if (variable.value.exprType != 'identifier') {
+				throw new Error(`right side and left side is not compatible type (varType=ref, exprType=${variable.value.exprType})`);
+			}
+
+			// occurs error if undefined
+			if (!definedVariables.some(i => i.name == variable.value.value)) {
+				throw new Error(`variable '${variable.value.value}' is not defined`);
+			}
+		}
+
+		definedVariables.push(variable);
+	}
+}
+
+
+//
+// block
+//
+
+const sectionTitleAttr: AttributeDifinision = {
+	name: 'title',
+	validate(attr: EmsAstBlockAttr)
+	{
+		if (attr.content.attrContentType != 'text') {
+			throw new Error(`title attribute must be of type text`);
+		}
+	}
+};
+
+const sectionBlockRequiredAttrs: AttributeDifinision[] = [sectionTitleAttr];
+const sectionBlockUsableAttrs: AttributeDifinision[] = [...sectionBlockRequiredAttrs];
+const textBlockRequiredAttrs: AttributeDifinision[] = [];
+const textBlockUsableAttrs: AttributeDifinision[] = [...textBlockRequiredAttrs];
+
+function validateBlocks(blocks: EmsAstBlock[])
+{
+	for (const block of blocks) {
+		if (isSectionBlock(block)) {
+			for (const attr of block.attrs) {
+				if (sectionBlockUsableAttrs.findIndex(i => i.name == attr.attrType) == -1) {
+					throw new Error(`${attr} attribute is invalid for section block`);
+				}
+			}
+			for (const requiredAttr of sectionBlockRequiredAttrs) {
+				const attr = block.attrs.find(i => i.attrType == requiredAttr.name);
+				if (!attr) {
+					throw new Error(`${attr} attribute is required for section block`);
+				}
+				if (requiredAttr.validate) {
+					requiredAttr.validate(attr);
+				}
+			}
+			validateBlocks(block.children);
+		}
+		else if (isTextBlock(block)) {
+			for (const attr of block.attrs) {
+				if (textBlockUsableAttrs.findIndex(i => i.name == attr.attrType) == -1) {
+					throw new Error(`${attr} attribute is invalid for text block`);
+				}
+			}
+			for (const requiredAttr of textBlockRequiredAttrs) {
+				const attr = block.attrs.find(i => i.attrType == requiredAttr.name);
+				if (!attr) {
+					throw new Error(`${requiredAttr} attribute is required for text block`);
+				}
+				if (requiredAttr.validate) {
+					requiredAttr.validate(attr);
+				}
+			}
+		}
+	}
+}
+
+
+export default class EmsParser
+{
 	internalParser: EmsInternalParser;
 
-	constructor() {
+	constructor()
+	{
 		this.internalParser = require('./peg/EmsInternalParser.js');
 	}
 
-	parse(inputCode: string): AisAst {
-
-		// # generate EmeraldScript AST
-
+	parse(inputCode: string): AisAst
+	{
+		// generate EmeraldScript AST
 		const ast: EmsAst = this.internalParser.parse(inputCode, { });
 
-		// # parse semantics
-
-		// meta
-
-		const requiredMetaTypes = ['title', 'name'];
-		const usableMetaTypes = [...requiredMetaTypes];
-		for (const meta of ast.metas) {
-			if (!usableMetaTypes.some(i => i == meta.metaType)) {
-				throw new Error(`invalid meta type: ${meta.metaType}`);
-			}
-		}
-		for (const requiredMetaType of requiredMetaTypes) {
-			if (!ast.metas.some(i => i.metaType == requiredMetaType)) {
-				throw new Error(`metadata ${requiredMetaType} is required`);
-			}
-		}
-
-		// var
-
-		// if (ast.vars.length != 0) {
-		// 	// not supported yet
-		// 	throw new Error('feature-not-supported: define variables');
-		// }
-
-		var usableVariableTypes = ['text', 'number', 'ref'];
-
-		var definedVariables: EmsAstVar[] = [];
-
-		for (const variable of ast.vars) {
-			if (!usableVariableTypes.some(i => i == variable.varType)) {
-				throw new Error(`var type '${variable.varType}' is not supported`);
-			}
-
-			// check type of assigned expression. if invalid, occurs error.
-
-			if (variable.varType == 'text') {
-				// occurs error if right side and left side is not compatible type
-				if (variable.value.exprType != 'text') {
-					throw new Error(`right side and left side is not compatible type (varType=text, exprType=${variable.value.exprType})`);
-				}
-			}
-			if (variable.varType == 'number') {
-				// occurs error if right side and left side is not compatible type
-				if (variable.value.exprType != 'number') {
-					throw new Error(`right side and left side is not compatible type (varType=number, exprType=${variable.value.exprType})`);
-				}
-			}
-			if (variable.varType == 'ref') {
-				// occurs error if right side and left side is not compatible type
-				if (variable.value.exprType != 'identifier') {
-					throw new Error(`right side and left side is not compatible type (varType=ref, exprType=${variable.value.exprType})`);
-				}
-
-				// occurs error if undefined
-				if (!definedVariables.some(i => i.name == variable.value.value)) {
-					throw new Error(`variable '${variable.value.value}' is not defined`);
-				}
-			}
-
-			definedVariables.push(variable);
-		}
-
-		// block
-
-		const sectionTitleAttr: AttributeDifinision = {
-			name: 'title',
-			validate(attr: EmsAstBlockAttr) {
-				if (attr.content.attrContentType != 'text') {
-					throw new Error(`title attribute must be of type text`);
-				}
-			}
-		};
-
-		const sectionBlockRequiredAttrs: AttributeDifinision[] = [sectionTitleAttr];
-		const sectionBlockUsableAttrs: AttributeDifinision[] = [...sectionBlockRequiredAttrs];
-		const textBlockRequiredAttrs: AttributeDifinision[] = [];
-		const textBlockUsableAttrs: AttributeDifinision[] = [...textBlockRequiredAttrs];
-
-		function validateBlocks(blocks: EmsAstBlock[]) {
-			for (const block of blocks) {
-				if (isSectionBlock(block)) {
-					for (const attr of block.attrs) {
-						if (sectionBlockUsableAttrs.findIndex(i => i.name == attr.attrType) == -1) {
-							throw new Error(`${attr} attribute is invalid for section block`);
-						}
-					}
-					for (const requiredAttr of sectionBlockRequiredAttrs) {
-						const attr = block.attrs.find(i => i.attrType == requiredAttr.name);
-						if (!attr) {
-							throw new Error(`${attr} attribute is required for section block`);
-						}
-						if (requiredAttr.validate) {
-							requiredAttr.validate(attr);
-						}
-					}
-					validateBlocks(block.children);
-				}
-				else if (isTextBlock(block)) {
-					for (const attr of block.attrs) {
-						if (textBlockUsableAttrs.findIndex(i => i.name == attr.attrType) == -1) {
-							throw new Error(`${attr} attribute is invalid for text block`);
-						}
-					}
-					for (const requiredAttr of textBlockRequiredAttrs) {
-						const attr = block.attrs.find(i => i.attrType == requiredAttr.name);
-						if (!attr) {
-							throw new Error(`${requiredAttr} attribute is required for text block`);
-						}
-						if (requiredAttr.validate) {
-							requiredAttr.validate(attr);
-						}
-					}
-				}
-			}
-		}
-
+		// validate semantics
+		validateMetas(ast.metas);
+		validateVariables(ast.vars);
 		validateBlocks(ast.blocks);
 
-		return this.transformToAiScript(ast);
+		// transform to ai script
+		const aiAst = this.transformToAiScript(ast);
+
+		return aiAst;
 	}
 
-	transformToAiScript(emsAst: EmsAst): AisAst {
+	transformToAiScript(emsAst: EmsAst): AisAst
+	{
 		const name = emsAst.metas.find(i => i.metaType == 'name');
 		const title = emsAst.metas.find(i => i.metaType == 'title');
 
-		function transformBlocks(src: EmsAstBlock[], dest: AisAstBlock[]) {
+		function transformBlocks(src: EmsAstBlock[], dest: AisAstBlock[])
+		{
 			for (const block of src) {
 				if (isTextBlock(block)) {
 					const aiBlockText: AisAstTextBlock = { id: uuid.v4(), type: 'text', text: block.text };
@@ -252,7 +270,8 @@ export default class EmsParser {
 		const blocks: AisAstBlock[] = [];
 		transformBlocks(emsAst.blocks, blocks);
 
-		function transformVars(src: EmsAstVar[], dest: AisAstVar[]) {
+		function transformVars(src: EmsAstVar[], dest: AisAstVar[])
+		{
 			for (const variable of src) {
 				vars.push({
 					id: uuid.v4(),
