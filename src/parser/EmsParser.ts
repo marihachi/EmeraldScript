@@ -56,7 +56,6 @@ function isTextBlock(obj: EmsAstBlock): obj is EmsAstTextBlock {
 	return obj.blockType == 'text';
 }
 
-
 interface AttributeDifinision {
 	name: string;
 	validate?: (attr: EmsAstBlockAttr) => void;

@@ -11,23 +11,27 @@ spacing
 
 // define meta
 
-metaTypeChar = !(lineBreak / space) c:. { return c; }
+defineMeta_typeChar = !(lineBreak / space) c:. { return c; }
 
-metaContentChar = !(lineBreak) c:. { return c; }
+defineMeta_contentChar = !(lineBreak) c:. { return c; }
 
-defineMeta = "#" type:$(metaTypeChar+) space+ content:$(metaContentChar+) {
+defineMeta_A = "#" type:$(defineMeta_typeChar+) space+ content:$(defineMeta_contentChar+) {
 	return { metaType: type.toLowerCase(), value: content };
 }
 
+defineMeta_B = "#" type:$(defineMeta_typeChar+) {
+	return { metaType: type.toLowerCase(), value: null };
+}
+
 defineMetaPart
-	= head:defineMeta items:(lineBreak item:defineMeta { return item; })* { return [head, ...items]; }
+	= head:(defineMeta_A / defineMeta_B) items:(lineBreak item:(defineMeta_A / defineMeta_B) { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
 
 // text literal
 
-textLiteralChar = !(lineBreak / [\t"]) c:. { return c; }
+textLiteral_char = !(lineBreak / [\t"]) c:. { return c; }
 
-textLiteral = "\"" text:$(textLiteralChar*) "\"" { return { exprType: 'text', value: text }; }
+textLiteral = "\"" text:$(textLiteral_char*) "\"" { return { exprType: 'text', value: text }; }
 
 // number literal
 
@@ -35,9 +39,9 @@ numberLiteral = head:[1-9] ns:$([0-9]*) { return { exprType: 'number', value: he
 
 // var identifier
 
-varIdentifierChar = !(lineBreak / space / ";") c:. { return c; }
+varIdentifier_char = !(lineBreak / space / ";") c:. { return c; }
 
-varIdentifier = identifier:$(varIdentifierChar+) { return { exprType: 'identifier', value: identifier }; }
+varIdentifier = identifier:$(varIdentifier_char+) { return { exprType: 'identifier', value: identifier }; }
 
 // var expression
 
@@ -45,12 +49,12 @@ varExpression = textLiteral / numberLiteral / varIdentifier
 
 // define var
 
-varDefIdChar = !(lineBreak / space / ":") c:. { return c; }
+defineVar_idChar = !(lineBreak / space / ":") c:. { return c; }
 
-varDefTypeChar = !(lineBreak / space / "=") c:. { return c; }
+defineVar_typeChar = !(lineBreak / space / "=") c:. { return c; }
 
 defineVar
-	= "var"i spacing+ name:$(varDefIdChar+) spacing* ":" spacing* type:$(varDefTypeChar+) spacing* "=" spacing* expr:varExpression ";" {
+	= "var"i spacing+ name:$(defineVar_idChar+) spacing* ":" spacing* type:$(defineVar_typeChar+) spacing* "=" spacing* expr:varExpression ";" {
 	return { name: name, varType: type.toLowerCase(), value: expr };
 }
 
@@ -60,41 +64,41 @@ defineVarPart
 
 // block attribute
 
-blockAttrIdChar = !(lineBreak / space / "=") c:. { return c; }
+blockAttr_idChar = !(lineBreak / space / "=") c:. { return c; }
 
-blockAttrContentTextChar = !(lineBreak / "\"") c:. { return c; }
+blockAttr_content_textChar = !(lineBreak / "\"") c:. { return c; }
 
-blockAttrContentText = "\"" text:$(blockAttrContentTextChar*) "\"" { return { attrContentType: 'text', value: text }; }
+blockAttr_content_text = "\"" text:$(blockAttr_content_textChar*) "\"" { return { attrContentType: 'text', value: text }; }
 
-blockAttrContent = blockAttrContentText
+blockAttr_content = blockAttr_content_text
 
-blockAttrItem = type:$(blockAttrIdChar+) spacing* "=" spacing* content:blockAttrContent {
+blockAttr = type:$(blockAttr_idChar+) spacing* "=" spacing* content:blockAttr_content {
 	return { attrType: type, content: content };
 }
 
-blockAttr
-	= head:blockAttrItem items:(spacing* item:blockAttrItem { return item; })* { return [head, ...items]; }
+blockAttrs
+	= head:blockAttr items:(spacing* item:blockAttr { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
 
 // section block
 
-beginSectionBlock = "<section"i attrs2:(spacing+ attrs:blockAttr spacing* { return attrs; })? ">" { return attrs2 || []; }
+sectionBlock_begin = "<section"i attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
 
-endSectionBlock = "</section>"i
+sectionBlock_end = "</section>"i
 
-sectionBlock = attrs:beginSectionBlock spacing* blocks:blockArea spacing* endSectionBlock {
+sectionBlock = attrs:sectionBlock_begin spacing* blocks:blockArea spacing* sectionBlock_end {
 	return { blockType: 'section', attrs: attrs, children: blocks };
 }
 
 // text block
 
-textBlockContentChar = !(endTextBlock) c:. { return c; }
+textBlock_contentChar = !(textBlock_end) c:. { return c; }
 
-beginTextBlock = "<text"i attrs2:(spacing+ attrs:blockAttr spacing* { return attrs; })? ">" { return attrs2 || []; }
+textBlock_begin = "<text"i attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
 
-endTextBlock = "</text>"i
+textBlock_end = "</text>"i
 
-textBlock = attrs:beginTextBlock spacing* text:$(textBlockContentChar*) spacing* endTextBlock {
+textBlock = attrs:textBlock_begin spacing* text:$(textBlock_contentChar*) spacing* textBlock_end {
 	return { blockType: 'text', attrs: attrs, text: text };
 }
 
