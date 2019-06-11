@@ -1,5 +1,6 @@
-#name EmeraldScriptTest02
-#title Emerald Script Test - 02
+#name EmeraldScriptTest
+#title Emerald Script Test
+#alignCenter
 
 var name: Text = "user1";
 var num1: Number = 1;
@@ -19,5 +20,3 @@ var nameRef: Ref = name;
 		number: {num1}
 	</text>
 </section>
-
-

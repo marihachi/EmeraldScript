@@ -66,6 +66,7 @@ interface AttributeDifinision {
 interface AisAst {
 	title: string;
 	name: string;
+	alignCenter?: boolean;
 	content: AisAstBlock[];
 	variables: any[];
 }
@@ -98,7 +99,7 @@ interface AisAstVar {
 //
 
 const requiredMetaTypes = ['title', 'name'];
-const usableMetaTypes = [...requiredMetaTypes];
+const usableMetaTypes = ['aligncenter', ...requiredMetaTypes];
 
 function validateMetas(metas: EmsAstMeta[])
 {
@@ -248,6 +249,7 @@ export default class EmsParser
 	{
 		const name = emsAst.metas.find(i => i.metaType == 'name');
 		const title = emsAst.metas.find(i => i.metaType == 'title');
+		let alignCenter = emsAst.metas.find(i => i.metaType == 'aligncenter');
 
 		function transformBlocks(src: EmsAstBlock[], dest: AisAstBlock[])
 		{
@@ -286,6 +288,7 @@ export default class EmsParser
 		return {
 			name: name!.value,
 			title: title!.value,
+			alignCenter: (alignCenter != null),
 			content: blocks,
 			variables: vars
 		};
