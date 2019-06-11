@@ -99,6 +99,7 @@ textBlock_begin = "<text"i attrs2:(spacing+ attrs:blockAttrs spacing* { return a
 textBlock_end = "</text>"i
 
 textBlock = attrs:textBlock_begin spacing* text:$(textBlock_contentChar*) spacing* textBlock_end {
+	text = text.replace(/\t/, '');
 	return { blockType: 'text', attrs: attrs, text: text };
 }
 
