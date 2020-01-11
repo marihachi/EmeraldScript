@@ -22,7 +22,9 @@
     "url": "https://github.com/marihachi/EmeraldScript/issues"
   },
   "dependencies": {
+    "@types/semver": "^6.2.0",
     "corekey": "^1.0.0-beta.6",
+    "semver": "^7.1.1",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
