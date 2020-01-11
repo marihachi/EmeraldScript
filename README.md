@@ -16,6 +16,9 @@ $ npx em login
 ## Syntax of EmeraldScript
 comming soon.
 
+Please see a basic example below:  
+https://github.com/marihachi/EmeraldScript/blob/master/example1.ems
+
 ## Usage
 ### 1. Log in to Misskey
 ```
