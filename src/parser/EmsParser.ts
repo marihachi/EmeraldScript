@@ -1,59 +1,36 @@
 import uuid from 'uuid';
+import {
+	AisAst,
+	AisAstObject,
+	AisAstSectionBlock,
+	AisAstTextBlock,
+	AisAstVariable,
+	AisAstFnCall,
+	EmsAst,
+	EmsAstBlock,
+	EmsAstBlockAttr,
+	EmsAstMeta,
+	//EmsAstVar,
+	EmsAstExpr,
+	isEmsAstVarExprLiteral,
+	isEmsAstExprLiteralText,
+	isEmsAstExprLiteralNumber,
+	isEmsAstExprBinaryOperator,
+	isEmsAstExprLoopFn,
+	//isEmsAstVarExprWithValue,
+	EmsAstStatement,
+	//isEmsAstVarExprMathOp,
+	EmsAstStatementVar,
+	isEmsAstStatementVar,
+	isEmsAstSectionBlock,
+	isEmsAstTextBlock,
+	//EmsAstVarExpr,
+	AisAstLiteral
+} from './ast';
 
 interface EmsInternalParser {
 	SyntaxError: any;
 	parse: (input: string, options?: {[x: string]: any}) => any;
-}
-
-// EmeraldScript AST
-
-interface EmsAst {
-	metas: EmsAstMeta[];
-	vars: EmsAstVar[];
-	blocks: EmsAstBlock[];
-}
-
-interface EmsAstMeta {
-	metaType: string;
-	value: string;
-}
-
-interface EmsAstVar {
-	name: string;
-	varType: string;
-	value: EmsAstVarExpr;
-}
-
-interface EmsAstVarExpr {
-	exprType: string;
-	value: string;
-}
-
-interface EmsAstBlock {
-	blockType: string;
-	attrs: EmsAstBlockAttr[];
-}
-
-interface EmsAstBlockAttr {
-	attrType: string;
-	content: {
-		attrContentType: string;
-		value: string;
-	};
-}
-
-interface EmsAstSectionBlock extends EmsAstBlock {
-	children: EmsAstBlock[];
-}
-function isSectionBlock(obj: EmsAstBlock): obj is EmsAstSectionBlock {
-	return obj.blockType == 'section';
-}
-
-interface EmsAstTextBlock extends EmsAstBlock {
-	text: string;
-}
-function isTextBlock(obj: EmsAstBlock): obj is EmsAstTextBlock {
-	return obj.blockType == 'text';
 }
 
 interface AttributeDifinision {
@@ -61,45 +38,12 @@ interface AttributeDifinision {
 	validate?: (attr: EmsAstBlockAttr) => void;
 }
 
-// AiScript AST
-
-interface AisAst {
-	title: string;
-	name: string;
-	alignCenter?: boolean;
-	content: AisAstBlock[];
-	variables: any[];
-}
-
-interface AisAstBlock {
-	id: string;
-	type: string;
-}
-
-interface AisAstSectionBlock extends AisAstBlock {
-	type: 'section';
-	title: string;
-	children: AisAstBlock[];
-}
-
-interface AisAstTextBlock extends AisAstBlock {
-	type: 'text';
-	text: string;
-}
-
-interface AisAstVar {
-	id: string;
-	type: string;
-	name: string;
-	value: string;
-}
-
 //
 // meta
 //
 
-const requiredMetaTypes = ['title', 'name'];
-const usableMetaTypes = ['aligncenter', ...requiredMetaTypes];
+const requiredMetaTypes: string[] = [];
+const usableMetaTypes: string[] = ['title', 'name', 'aligncenter', ...requiredMetaTypes];
 
 function validateMetas(metas: EmsAstMeta[])
 {
@@ -119,47 +63,63 @@ function validateMetas(metas: EmsAstMeta[])
 // variable
 //
 
-var usableVariableTypes = ['text', 'number', 'ref'];
+var usableVariableTypes = [
+	'text', 'loop-func', 'func', 'add', 'subtract', 'multiply', 'divide', 'number', 'ref'
+];
 
-var definedVariables: EmsAstVar[] = [];
+var definedVariables: EmsAstStatementVar[] = [];
 
-function validateVariables(vars: EmsAstVar[])
+function validateExpr(expr: EmsAstExpr)
 {
-	for (const variable of vars) {
-		if (!usableVariableTypes.some(i => i == variable.varType)) {
-			throw new Error(`var type '${variable.varType}' is not supported`);
-		}
+	// isEmsAstVarExprWithValue
+	if (isEmsAstVarExprLiteral(expr)) {
+		if (isEmsAstExprLiteralText(expr)) {
 
-		// check type of assigned expression. if invalid, occurs error.
-
-		if (variable.varType == 'text') {
-			// occurs error if right side and left side is not compatible type
-			if (variable.value.exprType != 'text') {
-				throw new Error(`right side and left side is not compatible type (varType=text, exprType=${variable.value.exprType})`);
-			}
 		}
-		if (variable.varType == 'number') {
-			// occurs error if right side and left side is not compatible type
-			if (variable.value.exprType != 'number') {
-				throw new Error(`right side and left side is not compatible type (varType=number, exprType=${variable.value.exprType})`);
-			}
-		}
-		if (variable.varType == 'ref') {
-			// occurs error if right side and left side is not compatible type
-			if (variable.value.exprType != 'identifier') {
-				throw new Error(`right side and left side is not compatible type (varType=ref, exprType=${variable.value.exprType})`);
-			}
+		else if (isEmsAstExprLiteralText(expr)) {
 
-			// occurs error if undefined
-			if (!definedVariables.some(i => i.name == variable.value.value)) {
-				throw new Error(`variable '${variable.value.value}' is not defined`);
-			}
 		}
+		else {
+			throw new Error('unknown literal type');
+		}
+	}
+	// isEmsAstVarExprMathOp
+	else if (isEmsAstExprBinaryOperator(expr)) {
+		validateExpr(expr.left);
+		validateExpr(expr.right);
+	}
+	else if (isEmsAstExprLoopFn(expr)) {
+		validateExpr(expr.expr);
+		// validate: expr.slot
 
-		definedVariables.push(variable);
+		// if the ref is not defined, occurs error
+		if (!definedVariables.some(i => i.name == expr.slot)) {
+			throw new Error(`variable '${expr.slot}' is not defined`);
+		}
+	}
+	else {
+		throw new Error('unknown expression type');
 	}
 }
 
+function validateStatements(statements: EmsAstStatement[])
+{
+	for (const statement of statements) {
+		if (isEmsAstStatementVar(statement)) {
+			if (!usableVariableTypes.some(i => i == statement.expr.exprType)) {
+				throw new Error(`var type '${statement.expr.exprType}' is not supported`);
+			}
+
+			// check type of assigned expression. if invalid, occurs error.
+			validateExpr(statement.expr);
+	
+			definedVariables.push(statement);
+		}
+		else {
+			throw new Error('unknown statement type');
+		}
+	}
+}
 
 //
 // block
@@ -183,7 +143,7 @@ const textBlockUsableAttrs: AttributeDifinision[] = [...textBlockRequiredAttrs];
 function validateBlocks(blocks: EmsAstBlock[])
 {
 	for (const block of blocks) {
-		if (isSectionBlock(block)) {
+		if (isEmsAstSectionBlock(block)) {
 			for (const attr of block.attrs) {
 				if (sectionBlockUsableAttrs.findIndex(i => i.name == attr.attrType) == -1) {
 					throw new Error(`${attr} attribute is invalid for section block`);
@@ -200,7 +160,7 @@ function validateBlocks(blocks: EmsAstBlock[])
 			}
 			validateBlocks(block.children);
 		}
-		else if (isTextBlock(block)) {
+		else if (isEmsAstTextBlock(block)) {
 			for (const attr of block.attrs) {
 				if (textBlockUsableAttrs.findIndex(i => i.name == attr.attrType) == -1) {
 					throw new Error(`${attr} attribute is invalid for text block`);
@@ -219,10 +179,91 @@ function validateBlocks(blocks: EmsAstBlock[])
 	}
 }
 
+function transformBlocks(src: EmsAstBlock[], dest: AisAstObject[])
+{
+	for (const block of src) {
+		if (isEmsAstTextBlock(block)) {
+			const aiBlockText: AisAstTextBlock = { id: uuid.v4(), type: 'text', text: block.text };
+			dest.push(aiBlockText);
+		}
+		else if (isEmsAstSectionBlock(block)) {
+			const attr = block.attrs.find(i => i.attrType == 'title');
+			const sectionTitle = attr!.content.value;
+			const children: AisAstObject[] = [];
+			transformBlocks(block.children, children);
+			const aiBlockSection: AisAstSectionBlock = { id: uuid.v4(), type: 'section', title: sectionTitle, children: children };
+			dest.push(aiBlockSection);
+		}
+		else {
+			throw new Error('unknown block');
+		}
+	}
+}
+
+function transformVarExpr(src: EmsAstVarExpr, dest: (AisAstVariable | AisAstObject)[], varName?: string)
+{
+	if (isEmsAstVarExprMathOp(src)) {
+		const left: AisAstVariable[] = [];
+		transformVarExpr(src.left, left);
+		const right: AisAstVariable[] = [];
+		transformVarExpr(src.right, right);
+
+		const fnCallVar: AisAstVariable | AisAstFnCall = {
+			id: uuid.v4(),
+			name: varName,
+			type: src.exprType,
+			value: null,
+			args: [
+				left[0],
+				right[0]
+			]
+		};
+		dest.push(fnCallVar);
+	}
+	else if (isEmsAstVarExprWithValue(src)) {
+		const literalVar: AisAstVariable | AisAstLiteral<any> = {
+			id: uuid.v4(),
+			name: varName,
+			type: src.exprType,
+			value: src.value
+		};
+		dest.push(literalVar);
+	}
+	else {
+		throw new Error('unknown expr');
+	}
+}
+
+function transformToAiScript(emsAst: EmsAst): AisAst
+{
+	const nameMeta = emsAst.metas.find(i => i.metaType == 'name');
+	const name = nameMeta ? nameMeta.value : undefined;
+	const titleMeta = emsAst.metas.find(i => i.metaType == 'title');
+	const title = titleMeta ? titleMeta.value : undefined;
+	const alignCenter = (emsAst.metas.find(i => i.metaType == 'aligncenter') != null);
+
+	const content: AisAstObject[] = [];
+	transformBlocks(emsAst.blocks, content);
+
+	const variables: AisAstVariable[] = [];
+	for (const variable of emsAst.vars) {
+		const exprs: AisAstVariable[] = [];
+		transformVarExpr(variable.expr, exprs, variable.name);
+		variables.push(exprs[0]);
+	}
+
+	return {
+		name,
+		title,
+		alignCenter,
+		content,
+		variables
+	};
+}
 
 export default class EmsParser
 {
-	internalParser: EmsInternalParser;
+	private internalParser: EmsInternalParser;
 
 	constructor()
 	{
@@ -234,63 +275,17 @@ export default class EmsParser
 		// generate EmeraldScript AST
 		const ast: EmsAst = this.internalParser.parse(inputCode, { });
 
+		//const astJson = JSON.stringify(ast, undefined, '  ');
+		//console.log('ast:', astJson);
+
 		// validate semantics
 		validateMetas(ast.metas);
-		validateVariables(ast.vars);
+		validateStatements(ast.statements);
 		validateBlocks(ast.blocks);
 
 		// transform to ai script
-		const aiAst = this.transformToAiScript(ast);
+		const aiAst = transformToAiScript(ast);
 
 		return aiAst;
-	}
-
-	transformToAiScript(emsAst: EmsAst): AisAst
-	{
-		const name = emsAst.metas.find(i => i.metaType == 'name');
-		const title = emsAst.metas.find(i => i.metaType == 'title');
-		let alignCenter = emsAst.metas.find(i => i.metaType == 'aligncenter');
-
-		function transformBlocks(src: EmsAstBlock[], dest: AisAstBlock[])
-		{
-			for (const block of src) {
-				if (isTextBlock(block)) {
-					const aiBlockText: AisAstTextBlock = { id: uuid.v4(), type: 'text', text: block.text };
-					dest.push(aiBlockText);
-				}
-				if (isSectionBlock(block)) {
-					const attr = block.attrs.find(i => i.attrType == 'title');
-					const sectionTitle = attr!.content.value;
-					const children: AisAstBlock[] = [];
-					transformBlocks(block.children, children);
-					const aiBlockSection: AisAstSectionBlock = { id: uuid.v4(), type: 'section', title: sectionTitle, children: children };
-					dest.push(aiBlockSection);
-				}
-			}
-		}
-		const blocks: AisAstBlock[] = [];
-		transformBlocks(emsAst.blocks, blocks);
-
-		function transformVars(src: EmsAstVar[], dest: AisAstVar[])
-		{
-			for (const variable of src) {
-				vars.push({
-					id: uuid.v4(),
-					type: variable.varType,
-					value: variable.value.value,
-					name: variable.name
-				});
-			}
-		}
-		const vars: AisAstVar[] = [];
-		transformVars(emsAst.vars, vars);
-
-		return {
-			name: name!.value,
-			title: title!.value,
-			alignCenter: (alignCenter != null),
-			content: blocks,
-			variables: vars
-		};
 	}
 }

@@ -1,6 +1,8 @@
 start = parts
 
+//
 // general
+//
 
 space
 	= [ \t]
@@ -9,7 +11,15 @@ lineBreak
 spacing
 	= space / lineBreak
 
-// define meta
+identifier_char = !(spacing / [+*/%;()=<>'`",!@-]) c:. { return c; }
+
+textLine_char = !(lineBreak / [\t"]) c:. { return c; }
+
+number = head:[1-9] ns:$([0-9]*) { return head + ns; }
+
+//
+// meta part
+//
 
 defineMeta_typeChar = !(lineBreak / space) c:. { return c; }
 
@@ -27,52 +37,90 @@ defineMetaPart
 	= head:(defineMeta_A / defineMeta_B) items:(lineBreak item:(defineMeta_A / defineMeta_B) { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
 
-// text literal
+//
+// statement part
+//
 
-textLiteral_char = !(lineBreak / [\t"]) c:. { return c; }
+// literal value: text
+textLiteral = "\"" text:$(textLine_char*) "\"" { return { exprType: 'literal', literalType: 'text', value: text }; }
 
-textLiteral = "\"" text:$(textLiteral_char*) "\"" { return { exprType: 'text', value: text }; }
+// literal value: number
+numberLiteral = num:number { return { exprType: 'literal', literalType: 'number', value: num }; }
 
-// number literal
+// value: variable reference
+variableReference = identifier:$(identifier_char+) { return { exprType: 'ref', value: identifier }; }
 
-numberLiteral = head:[1-9] ns:$([0-9]*) { return { exprType: 'number', value: head + ns }; }
-
-// var identifier
-
-varIdentifier_char = !(lineBreak / space / ";") c:. { return c; }
-
-varIdentifier = identifier:$(varIdentifier_char+) { return { exprType: 'identifier', value: identifier }; }
-
-// var expression
-
-varExpression = textLiteral / numberLiteral / varIdentifier
-
-// define var
-
-defineVar_idChar = !(lineBreak / space / ":") c:. { return c; }
-
-defineVar_typeChar = !(lineBreak / space / "=") c:. { return c; }
-
-defineVar
-	= "var"i spacing+ name:$(defineVar_idChar+) spacing* ":" spacing* type:$(defineVar_typeChar+) spacing* "=" spacing* expr:varExpression ";" {
-	return { name: name, varType: type.toLowerCase(), value: expr };
+// value: loop function
+loopFunction_left = "(" spacing* slot:$(identifier_char+) spacing+ "to"i spacing+ times:number spacing* ")" {
+	return { slot, times };
 }
 
-defineVarPart
-	= head:defineVar items:(lineBreak item:defineVar { return item; })* { return [head, ...items]; }
+loopFunction = left:loopFunction_left spacing* "=>" spacing* expr:expression {
+	return { exprType: 'loop-func', slot: left.slot, times: left.times, expr };
+}
+
+// value: user defined function
+userFunction_args =
+	head:$(identifier_char+) items:(spacing* ',' spacing* item:$(identifier_char+) { return item; })* { return [head, ...items]; }
+
+userFunction = "(" spacing* args:userFunction_args spacing* ")" spacing* "=>" spacing* expr:expression {
+	return { exprType: 'func', args, expr };
+}
+
+// TODO: function call
+
+// math operation: add
+addOperation = left:(numberLiteral / variableReference) spacing* "+" spacing* right:(numberLiteral / variableReference) {
+	return { exprType: 'add', left, right };
+}
+
+// math operation: subtract
+subtractOperation = left:(numberLiteral / variableReference) spacing* "-" spacing* right:(numberLiteral / variableReference) {
+	return { exprType: 'subtract', left, right };
+}
+
+// math operation: multiply
+multiplyOperation = left:(numberLiteral / variableReference) spacing* "*" spacing* right:(numberLiteral / variableReference) {
+	return { exprType: 'multiply', left, right };
+}
+
+// math operation: divide
+divideOperation = left:(numberLiteral / variableReference) spacing* "/" spacing* right:(numberLiteral / variableReference) {
+	return { exprType: 'divide', left, right };
+}
+
+// expression
+
+valueExpr = textLiteral / numberLiteral / userFunction / loopFunction / variableReference
+
+mathOperationExpr = addOperation / subtractOperation / multiplyOperation / divideOperation
+
+expression = mathOperationExpr / valueExpr
+
+// statement: define variable
+
+defineVar
+	= name:$(identifier_char+) spacing* "=" spacing* expr:expression ";" {
+	return { statementType: 'variable', name, expr };
+}
+
+statement = defineVar
+
+statementPart
+	= head:statement items:(lineBreak item:statement { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
+
+//
+// block part
+//
 
 // block attribute
 
-blockAttr_idChar = !(lineBreak / space / "=") c:. { return c; }
-
-blockAttr_content_textChar = !(lineBreak / "\"") c:. { return c; }
-
-blockAttr_content_text = "\"" text:$(blockAttr_content_textChar*) "\"" { return { attrContentType: 'text', value: text }; }
+blockAttr_content_text = "\"" text:$(textLine_char*) "\"" { return { attrContentType: 'text', value: text }; }
 
 blockAttr_content = blockAttr_content_text
 
-blockAttr = type:$(blockAttr_idChar+) spacing* "=" spacing* content:blockAttr_content {
+blockAttr = type:$(identifier_char+) spacing* "=" spacing* content:blockAttr_content {
 	return { attrType: type, content: content };
 }
 
@@ -103,8 +151,6 @@ textBlock = attrs:textBlock_begin spacing* text:$(textBlock_contentChar*) spacin
 	return { blockType: 'text', attrs: attrs, text: text };
 }
 
-// block
-
 block = sectionBlock / textBlock
 
 blockArea
@@ -113,8 +159,10 @@ blockArea
 
 blockPart = blockArea
 
+//
 // parts
+//
 
-parts = spacing* metas:defineMetaPart spacing* vars:defineVarPart spacing* blocks:blockPart spacing* {
-	return { metas: metas, vars: vars, blocks: blocks };
+parts = spacing* metas:defineMetaPart spacing* statements:statementPart spacing* blocks:blockPart spacing* {
+	return { metas: metas, statements: statements, blocks: blocks };
 }

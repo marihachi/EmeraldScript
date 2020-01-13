@@ -2,9 +2,9 @@
 #title Emerald Script Test
 #alignCenter
 
-var name: Text = "user1";
-var num1: Number = 1;
-var nameRef: Ref = name;
+name = "user1";
+num1 = 1 + 2;
+nameRef = name;
 
 <section title="hello">
 	<text>
