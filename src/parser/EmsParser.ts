@@ -11,6 +11,7 @@ interface EmsAst {
 	metas: EmsAstMeta[];
 	vars: EmsAstVar[];
 	blocks: EmsAstBlock[];
+	script: string;
 }
 
 interface EmsAstMeta {
@@ -69,6 +70,7 @@ interface AisAst {
 	alignCenter?: boolean;
 	content: AisAstBlock[];
 	variables: any[];
+	script: string;
 }
 
 interface AisAstBlock {
@@ -290,7 +292,8 @@ export default class EmsParser
 			title: title!.value,
 			alignCenter: (alignCenter != null),
 			content: blocks,
-			variables: vars
+			variables: vars,
+			script: emsAst.script
 		};
 	}
 }

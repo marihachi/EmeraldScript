@@ -20,3 +20,10 @@ var nameRef: Ref = name;
 		number: {num1}
 	</text>
 </section>
+
+<script>
+
+#text = "Hello AiScript!"
+#abc = "bebeyo"
+
+</script>

@@ -113,8 +113,29 @@ blockArea
 
 blockPart = blockArea
 
+// script
+
+scriptBlock_content = (!(scriptBlock_end) .)* { return text(); }
+
+scriptBlock_begin = "<script>"i lineBreak?
+
+scriptBlock_end = lineBreak? "</script>"i
+
+scriptBlock = scriptBlock_begin content:scriptBlock_content scriptBlock_end {
+	return content;
+}
+
+scriptPart
+	= script:scriptBlock { return script; }
+	/ "" { return ""; }
+
 // parts
 
-parts = spacing* metas:defineMetaPart spacing* vars:defineVarPart spacing* blocks:blockPart spacing* {
-	return { metas: metas, vars: vars, blocks: blocks };
+parts = spacing* metas:defineMetaPart spacing* vars:defineVarPart spacing* blocks:blockPart spacing* script:scriptPart spacing* {
+	return {
+		metas: metas,
+		vars: vars,
+		blocks: blocks,
+		script: script
+	};
 }
