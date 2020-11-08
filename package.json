@@ -22,6 +22,7 @@
     "url": "https://github.com/marihachi/EmeraldScript/issues"
   },
   "dependencies": {
+    "@types/pegjs": "0.10.x",
     "@types/semver": "7.3.x",
     "corekey": "1.0.x",
     "semver": "7.3.x",

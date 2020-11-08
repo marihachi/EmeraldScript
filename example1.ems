@@ -2,28 +2,23 @@
 #title Emerald Script Test
 #alignCenter
 
-var name: Text = "user1";
-var num1: Number = 1;
-var nameRef: Ref = name;
-
 <section title="hello">
 	<text>
-		hi {nameRef}
+		{message}
 	</text>
 </section>
 
 <section title="abc">
 	<text>
-		yeah
+		hoge
 	</text>
 	<text>
-		number: {num1}
+		piyo
 	</text>
 </section>
 
 <script>
 
-#text = "Hello AiScript!"
-#abc = "bebeyo"
+#message = "Hello AiScript!"
 
 </script>

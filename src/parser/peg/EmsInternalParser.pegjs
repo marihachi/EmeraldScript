@@ -1,96 +1,68 @@
 start = parts
 
-// general
+//
+// parts
+//
 
-space
-	= [ \t]
-lineBreak
-	= "\n" / "\r\n" / "\r"
-spacing
-	= space / lineBreak
-
-// define meta
-
-defineMeta_typeChar = !(lineBreak / space) c:. { return c; }
-
-defineMeta_contentChar = !(lineBreak) c:. { return c; }
-
-defineMeta_A = "#" type:$(defineMeta_typeChar+) space+ content:$(defineMeta_contentChar+) {
-	return { metaType: type.toLowerCase(), value: content };
+parts = spacing* metas:defineMetaPart spacing* blocks:blockPart spacing* script:scriptPart? spacing* {
+	const ast = [
+		...metas,
+		...blocks
+	];
+	if (script) {
+		ast.push(script);
+	}
+	return ast;
 }
 
-defineMeta_B = "#" type:$(defineMeta_typeChar+) {
-	return { metaType: type.toLowerCase(), value: null };
-}
+//
+// meta
+//
 
 defineMetaPart
 	= head:(defineMeta_A / defineMeta_B) items:(lineBreak item:(defineMeta_A / defineMeta_B) { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
 
-// text literal
-
-textLiteral_char = !(lineBreak / [\t"]) c:. { return c; }
-
-textLiteral = "\"" text:$(textLiteral_char*) "\"" { return { exprType: 'text', value: text }; }
-
-// number literal
-
-numberLiteral = head:[1-9] ns:$([0-9]*) { return { exprType: 'number', value: head + ns }; }
-
-// var identifier
-
-varIdentifier_char = !(lineBreak / space / ";") c:. { return c; }
-
-varIdentifier = identifier:$(varIdentifier_char+) { return { exprType: 'identifier', value: identifier }; }
-
-// var expression
-
-varExpression = textLiteral / numberLiteral / varIdentifier
-
-// define var
-
-defineVar_idChar = !(lineBreak / space / ":") c:. { return c; }
-
-defineVar_typeChar = !(lineBreak / space / "=") c:. { return c; }
-
-defineVar
-	= "var"i spacing+ name:$(defineVar_idChar+) spacing* ":" spacing* type:$(defineVar_typeChar+) spacing* "=" spacing* expr:varExpression ";" {
-	return { name: name, varType: type.toLowerCase(), value: expr };
+defineMeta_A = "#" name:$(defineMeta_nameChar+) space+ content:$(defineMeta_contentChar+) {
+	return { op: 'addMeta', name: name.toLowerCase(), value: content };
 }
 
-defineVarPart
-	= head:defineVar items:(lineBreak item:defineVar { return item; })* { return [head, ...items]; }
-	/ "" { return []; }
-
-// block attribute
-
-blockAttr_idChar = !(lineBreak / space / "=") c:. { return c; }
-
-blockAttr_content_textChar = !(lineBreak / "\"") c:. { return c; }
-
-blockAttr_content_text = "\"" text:$(blockAttr_content_textChar*) "\"" { return { attrContentType: 'text', value: text }; }
-
-blockAttr_content = blockAttr_content_text
-
-blockAttr = type:$(blockAttr_idChar+) spacing* "=" spacing* content:blockAttr_content {
-	return { attrType: type, content: content };
+defineMeta_B = "#" name:$(defineMeta_nameChar+) {
+	return { op: 'addMeta', name: name.toLowerCase(), value: null };
 }
 
-blockAttrs
-	= head:blockAttr items:(spacing* item:blockAttr { return item; })* { return [head, ...items]; }
+defineMeta_contentChar = !(lineBreak) . { return text(); }
+
+defineMeta_nameChar = !(lineBreak / space) . { return text(); }
+
+//
+// block
+//
+
+blockPart = blockArea
+
+blockArea
+	= head:block items:(spacing* item:block { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
+
+block = sectionBlock / textBlock
 
 // section block
+
+sectionBlock = attrs:sectionBlock_begin spacing* blocks:blockArea spacing* sectionBlock_end {
+	return { op: 'addBlock', name: 'section', attrs: attrs, children: blocks };
+}
 
 sectionBlock_begin = "<section"i attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
 
 sectionBlock_end = "</section>"i
 
-sectionBlock = attrs:sectionBlock_begin spacing* blocks:blockArea spacing* sectionBlock_end {
-	return { blockType: 'section', attrs: attrs, children: blocks };
-}
-
 // text block
+
+textBlock = attrs:textBlock_begin spacing* text:$(textBlock_contentChar*) spacing* textBlock_end {
+	text = text.replace(/\t/, '');
+	return { op: 'addBlock', name: 'text', attrs, text };
+}
 
 textBlock_contentChar = !(textBlock_end) c:. { return c; }
 
@@ -98,22 +70,34 @@ textBlock_begin = "<text"i attrs2:(spacing+ attrs:blockAttrs spacing* { return a
 
 textBlock_end = "</text>"i
 
-textBlock = attrs:textBlock_begin spacing* text:$(textBlock_contentChar*) spacing* textBlock_end {
-	text = text.replace(/\t/, '');
-	return { blockType: 'text', attrs: attrs, text: text };
-}
+// block attribute
 
-// block
-
-block = sectionBlock / textBlock
-
-blockArea
-	= head:block items:(spacing* item:block { return item; })* { return [head, ...items]; }
+blockAttrs
+	= head:blockAttr items:(spacing* item:blockAttr { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
 
-blockPart = blockArea
+blockAttr = name:$(blockAttr_idChar+) spacing* "=" spacing* content:blockAttr_content {
+	return { name, ...content };
+}
 
+blockAttr_content = blockAttr_content_text
+
+blockAttr_content_text = "\"" text:$(blockAttr_content_textChar*) "\"" { return { valueType: 'string', value: text }; }
+
+blockAttr_content_textChar = !(lineBreak / "\"") . { return text(); }
+
+blockAttr_idChar = !(lineBreak / space / "=") . { return text(); }
+
+//
 // script
+//
+
+scriptPart = scriptBlock_begin content:scriptBlock_content scriptBlock_end {
+	return {
+		op: 'setAiScript',
+		content: content
+	};
+}
 
 scriptBlock_content = (!(scriptBlock_end) .)* { return text(); }
 
@@ -121,21 +105,13 @@ scriptBlock_begin = "<script>"i lineBreak?
 
 scriptBlock_end = lineBreak? "</script>"i
 
-scriptBlock = scriptBlock_begin content:scriptBlock_content scriptBlock_end {
-	return content;
-}
+//
+// general
+//
 
-scriptPart
-	= script:scriptBlock { return script; }
-	/ "" { return ""; }
-
-// parts
-
-parts = spacing* metas:defineMetaPart spacing* vars:defineVarPart spacing* blocks:blockPart spacing* script:scriptPart spacing* {
-	return {
-		metas: metas,
-		vars: vars,
-		blocks: blocks,
-		script: script
-	};
-}
+space
+	= [ \t]
+lineBreak
+	= "\n" / "\r\n" / "\r"
+spacing
+	= space / lineBreak
