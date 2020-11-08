@@ -57,6 +57,10 @@ export default async function(args: string[])
 		throw 'the input file is invalid format';
 	}
 
+	if (aiast.script == null) {
+		aiast.script = '';
+	}
+
 	const page = await account.request('pages/create', aiast);
 
 	if (page.error) {
@@ -64,7 +68,7 @@ export default async function(args: string[])
 			console.log(JSON.stringify(page.error.info));
 		}
 
-		throw `failed to create the page (error: ${page.error.message})`;
+		throw `failed to create the page (${JSON.stringify(page.error)})`;
 	}
 
 	console.log('The page has been created');

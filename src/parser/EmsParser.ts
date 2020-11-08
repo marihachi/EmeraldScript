@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 as uuid } from 'uuid';
 
 interface EmsInternalParser {
 	SyntaxError: any;
@@ -255,7 +255,7 @@ export default class EmsParser
 		{
 			for (const block of src) {
 				if (isTextBlock(block)) {
-					const aiBlockText: AisAstTextBlock = { id: uuid.v4(), type: 'text', text: block.text };
+					const aiBlockText: AisAstTextBlock = { id: uuid(), type: 'text', text: block.text };
 					dest.push(aiBlockText);
 				}
 				if (isSectionBlock(block)) {
@@ -263,7 +263,7 @@ export default class EmsParser
 					const sectionTitle = attr!.content.value;
 					const children: AisAstBlock[] = [];
 					transformBlocks(block.children, children);
-					const aiBlockSection: AisAstSectionBlock = { id: uuid.v4(), type: 'section', title: sectionTitle, children: children };
+					const aiBlockSection: AisAstSectionBlock = { id: uuid(), type: 'section', title: sectionTitle, children: children };
 					dest.push(aiBlockSection);
 				}
 			}
@@ -275,7 +275,7 @@ export default class EmsParser
 		{
 			for (const variable of src) {
 				vars.push({
-					id: uuid.v4(),
+					id: uuid(),
 					type: variable.varType,
 					value: variable.value.value,
 					name: variable.name
