@@ -2,3 +2,5 @@ node_modules
 built
 package-lock.json
 config.json
+.em
+.vscode
