@@ -33,7 +33,7 @@ export default async function(args: string[])
 		}
 		const fileNameWithoutExt = fileNameSplited.join('.');
 
-		outputFile = path.join(inputDir, `${fileNameWithoutExt}.ai.json`);
+		outputFile = path.join(inputDir, `${fileNameWithoutExt}.page.json`);
 	}
 	if (!path.isAbsolute(outputFile)) {
 		outputFile = path.resolve(outputFile);
@@ -54,9 +54,9 @@ export default async function(args: string[])
 		await writeFile(outputFile, JSON.stringify(aisAst));
 	}
 	catch (err) {
-		throw 'failed to generate the AiScript file';
+		throw 'failed to generate the page file';
 	}
 
-	console.log('An AiScript file has been generated:'); 
+	console.log('An page file has been generated:'); 
 	console.log(outputFile); 
 }
