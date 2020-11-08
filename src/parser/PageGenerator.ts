@@ -1,6 +1,8 @@
 import { v4 as uuid } from 'uuid';
-import { AstBlock, isTextBlock, isSectionBlock, AstInstruction, isAstBlock, isAstMeta, validateMeta, validateBlock } from './ScriptAst';
-import { PageObject, PageBlock, generatePageSectionBlock, generatePageTextBlock } from './Page';
+import { parse as parseAiScript } from '@syuilo/aiscript';
+import { AstBlock, isTextBlock, isSectionBlock, AstInstruction, isAstBlock, isAstMeta, validateMeta, validateBlock, isAstScript, isInputNumberBlock } from './ScriptAst';
+import { PageObject, PageBlock, generatePageSectionBlock, generatePageTextBlock, generatePageVarOfAiScript, generatePageNumberInputBlock } from './Page';
+import { AiNode, isAiVarDef } from './Aiscript';
 
 export function generatePage(instructions: AstInstruction[]): PageObject
 {
@@ -8,8 +10,8 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 	{
 		validateBlock(instruction);
 		if (isTextBlock(instruction)) {
-			const pageTextBlock = generatePageTextBlock(instruction.text);
-			parentContainer.push(pageTextBlock);
+			const block = generatePageTextBlock(instruction.text);
+			parentContainer.push(block);
 		}
 		else if (isSectionBlock(instruction)) {
 			const titleAttr = instruction.attrs.find(attr => attr.name == 'title')!;
@@ -17,8 +19,16 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 			for (const child of instruction.children) {
 				generateBlock(child, children, ctx);
 			}
-			const sectionBlock = generatePageSectionBlock(titleAttr.value, children);
-			parentContainer.push(sectionBlock);
+			const block = generatePageSectionBlock(titleAttr.value, children);
+			parentContainer.push(block);
+		}
+		else if (isInputNumberBlock(instruction)) {
+			const variableAttr = instruction.attrs.find(attr => attr.name == 'variable')!;
+			const defaultAttr = instruction.attrs.find(attr => attr.name == 'default')!;
+			const titleAttr = instruction.attrs.find(attr => attr.name == 'title');
+			// TODO: validation
+			const block = generatePageNumberInputBlock(variableAttr.value, parseInt(defaultAttr.value), titleAttr ? titleAttr.value : '');
+			parentContainer.push(block);
 		}
 	}
 
@@ -51,6 +61,24 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 		}
 		else if (isAstBlock(instruction)) {
 			generateBlock(instruction, page.content, page);
+		}
+		else if (isAstScript(instruction)) {
+			page.script = instruction.content;
+		}
+	}
+
+	if (page.script) {
+		try {
+			const aiNodes: AiNode[] = parseAiScript(page.script);
+			for (const aiNode of aiNodes) {
+				if (isAiVarDef(aiNode)) {
+					// generate a page variable of the AiScript variable
+					const aiScriptVar = generatePageVarOfAiScript(aiNode.name);
+					page.variables.push(aiScriptVar);
+				}
+			}
+		}
+		catch (err) {
 		}
 	}
 

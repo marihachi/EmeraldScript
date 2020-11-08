@@ -15,6 +15,7 @@
 	<text>
 		piyo
 	</text>
+	<inputNumber variable="num" default="2" title="abc"></inputNumber>
 </section>
 
 <script>

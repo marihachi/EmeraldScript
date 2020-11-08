@@ -29,6 +29,14 @@ export interface PageTextBlock extends PageBlock
 	text: string;
 }
 
+export interface PageNumberInputBlock extends PageBlock
+{
+	type: 'numberInput';
+	default: number;
+	name: string;
+	text: string;
+}
+
 export interface PageVar
 {
 	id: string;
@@ -64,11 +72,22 @@ export function generatePageSectionBlock(title: string, children: PageBlock[]): 
 	};
 }
 
+export function generatePageNumberInputBlock(variable: string, defaultValue: number, title: string): PageNumberInputBlock
+{
+	return {
+		id: uuid(),
+		type: 'numberInput',
+		name: variable,
+		default: defaultValue,
+		text: title
+	};
+}
+
 //
 // Variable
 //
 
-export function generatePageVarOfScript(name: string): AiScriptPageVar
+export function generatePageVarOfAiScript(name: string): AiScriptPageVar
 {
 	return {
 		id: uuid(),

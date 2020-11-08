@@ -68,6 +68,16 @@ export function isTextBlock(obj: AstBlock): obj is AstTextBlock
 	return obj.name == 'text';
 }
 
+export interface AstInputNumberBlock extends AstBlock
+{
+	name: 'inputNumber';
+}
+
+export function isInputNumberBlock(obj: AstBlock): obj is AstInputNumberBlock
+{
+	return obj.name == 'inputNumber';
+}
+
 // AstScript
 
 export interface AstScript extends AstInstruction
@@ -125,7 +135,27 @@ export const blockDifinisions: BlockDifinision[] = [
 	{
 		name: 'text',
 		attrs: []
-	}
+	},
+	{
+		name: 'inputNumber',
+		attrs: [
+			{
+				name: 'variable',
+				required: true,
+				valueType: 'string'
+			},
+			{
+				name: 'default',
+				required: true,
+				valueType: 'string'
+			},
+			{
+				name: 'title',
+				required: false,
+				valueType: 'string'
+			}
+		]
+	},
 ];
 
 export function validateBlock(block: AstBlock): void

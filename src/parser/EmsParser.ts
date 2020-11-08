@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import { PegjsError, Parser } from 'pegjs';
 import { AstInstruction } from './ScriptAst';
 import { PageObject } from './Page';

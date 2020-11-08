@@ -45,7 +45,7 @@ blockArea
 	= head:block items:(spacing* item:block { return item; })* { return [head, ...items]; }
 	/ "" { return []; }
 
-block = sectionBlock / textBlock
+block = sectionBlock / textBlock / inputNumberBlock
 
 // section block
 
@@ -53,9 +53,9 @@ sectionBlock = attrs:sectionBlock_begin spacing* blocks:blockArea spacing* secti
 	return { op: 'addBlock', name: 'section', attrs: attrs, children: blocks };
 }
 
-sectionBlock_begin = "<section"i attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
+sectionBlock_begin = "<section" attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
 
-sectionBlock_end = "</section>"i
+sectionBlock_end = "</section>"
 
 // text block
 
@@ -66,9 +66,19 @@ textBlock = attrs:textBlock_begin spacing* text:$(textBlock_contentChar*) spacin
 
 textBlock_contentChar = !(textBlock_end) c:. { return c; }
 
-textBlock_begin = "<text"i attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
+textBlock_begin = "<text" attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
 
-textBlock_end = "</text>"i
+textBlock_end = "</text>"
+
+// inputNumber block
+
+inputNumberBlock = attrs:inputNumberBlock_begin spacing* blocks:blockArea spacing* inputNumberBlock_end {
+	return { op: 'addBlock', name: 'inputNumber', attrs: attrs, children: blocks };
+}
+
+inputNumberBlock_begin = "<inputNumber" attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
+
+inputNumberBlock_end = "</inputNumber>"
 
 // block attribute
 
