@@ -26,7 +26,22 @@ export default async function(args: string[])
 	let host = await inputLine('Input the host name of misskey instance (default: misskey.io) > ');
 	if (host == '') host = 'misskey.io';
 
-	const versionRes: Record<string, any> = await Configuration.Requester.request(host, 'version', { }, false);
+	let versionRes: Record<string, any> | null = null;
+	try {
+		versionRes = await Configuration.Requester.request(host, 'version', { }, false);
+	}
+	catch {
+	}
+	if (versionRes == null) {
+		try {
+			versionRes = await Configuration.Requester.request(host, 'meta', { }, false);
+		}
+		catch {
+		}
+	}
+	if (versionRes == null) {
+		throw `unknown instance version`;
+	}
 	console.log('instance version:', versionRes.version);
 	const parsed = semver.parse(versionRes.version);
 	if (!parsed) {
