@@ -16,7 +16,7 @@ export default class EmsParser
 		}
 		catch (err) {
 			const syntaxErr = err as PegjsError;
-			throw `syntax error (location ${syntaxErr.location.start.line}:${syntaxErr.location.start.column})`;
+			throw `parsing faild (location ${syntaxErr.location.start.line}:${syntaxErr.location.start.column})`;
 		}
 
 		return generatePage(ast);
