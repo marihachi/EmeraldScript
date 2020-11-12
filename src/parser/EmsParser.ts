@@ -1,16 +1,16 @@
 import { PegjsError, Parser } from 'pegjs';
-import { AstInstruction } from './ScriptAst';
-import { PageObject } from './Page';
+import * as Script from './ScriptAst';
+import * as Page from './Page';
 import { generatePage } from './PageGenerator';
 
 const internalParser: Parser = require('./peg/EmsInternalParser.js');
 
 export default class EmsParser
 {
-	parse(inputCode: string): PageObject
+	parse(inputCode: string): Page.DefinitionData
 	{
 		// generate EmeraldScript instructions
-		let ast: AstInstruction[];
+		let ast: Script.Instruction[];
 		try {
 			ast = internalParser.parse(inputCode, { });
 		}

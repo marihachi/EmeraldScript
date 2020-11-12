@@ -3,7 +3,7 @@ import fs from 'fs';
 import { promisify } from 'util';
 import EmsParser from '../../parser/EmsParser';
 import { showHelp } from '../misc/commandUtil';
-import { PageObject } from '../../parser/Page';
+import * as Page from '../../parser/Page';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -49,7 +49,7 @@ export default async function(args: string[])
 	}
 
 	const emsParser = new EmsParser();
-	let page: PageObject;
+	let page: Page.DefinitionData;
 	try {
 		page = emsParser.parse(scriptData);
 	}

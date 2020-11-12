@@ -1,32 +1,40 @@
 import { v4 as uuid } from 'uuid';
 import { parse as parseAiScript } from '@syuilo/aiscript';
-import { AstBlock, isTextBlock, isSectionBlock, AstInstruction, isAstBlock, isAstMeta, validateMeta, validateBlock, isAstScript, isInputNumberBlock } from './ScriptAst';
-import { PageObject, PageBlock, generatePageSectionBlock, generatePageTextBlock, generatePageVarOfAiScript, generatePageNumberInputBlock } from './Page';
+import * as Script from './ScriptAst';
+import * as Page from './Page';
 import { AiNode, isAiVarDef } from './Aiscript';
 
-export function generatePage(instructions: AstInstruction[]): PageObject
+export function generatePage(instructions: Script.Instruction[]): Page.DefinitionData
 {
-	function generateBlock(instruction: AstBlock, parentContainer: PageBlock[], ctx: PageObject)
+	function generateBlock(instruction: Script.Block, parentContainer: Page.PageBlock[], ctx: Page.DefinitionData)
 	{
-		validateBlock(instruction);
-		if (isTextBlock(instruction)) {
-			const block = generatePageTextBlock(instruction.text);
-			parentContainer.push(block);
-		}
-		else if (isSectionBlock(instruction)) {
-			const titleAttr = instruction.attrs.find(attr => attr.name == 'title')!;
-			const children: PageBlock[] = [];
+		Script.validateBlock(instruction);
+
+		// container block
+		let children: Page.PageBlock[] = [];
+		if (Script.isContainerBlock(instruction)) {
 			for (const child of instruction.children) {
 				generateBlock(child, children, ctx);
 			}
-			const block = generatePageSectionBlock(titleAttr.value, children);
+		}
+
+		if (Script.isTextBlock(instruction)) {
+			const block = Page.generatePageTextBlock(instruction.text);
 			parentContainer.push(block);
 		}
-		else if (isInputNumberBlock(instruction)) {
+		else if (Script.isSectionBlock(instruction)) {
+			const titleAttr = instruction.attrs.find(attr => attr.name == 'title')!;
+			const block = Page.generatePageSectionBlock(titleAttr.value, children);
+			parentContainer.push(block);
+		}
+		else if (Script.isInputNumberBlock(instruction)) {
 			const variableAttr = instruction.attrs.find(attr => attr.name == 'variable')!;
 			const defaultAttr = instruction.attrs.find(attr => attr.name == 'default')!;
 			const titleAttr = instruction.attrs.find(attr => attr.name == 'title');
-			const block = generatePageNumberInputBlock(
+			if (children.length > 0) {
+				throw 'inputNumber block: children blocks are not supported';
+			}
+			const block = Page.generatePageNumberInputBlock(
 				variableAttr.value,
 				parseInt(defaultAttr.value, 10),
 				titleAttr ? titleAttr.value : ''
@@ -36,7 +44,7 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 	}
 
 	const pageId = uuid();
-	const page: PageObject = {
+	const page: Page.DefinitionData = {
 		title: pageId,
 		name: pageId,
 		alignCenter: false,
@@ -46,8 +54,8 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 	};
 
 	for (const instruction of instructions) {
-		if (isAstMeta(instruction)) {
-			validateMeta(instruction);
+		if (Script.isMetaInfo(instruction)) {
+			Script.validateMeta(instruction);
 			switch (instruction.name) {
 			case 'aligncenter':
 				page.alignCenter = true;
@@ -62,10 +70,10 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 				throw 'unexprected operation: unknown meta name';
 			}
 		}
-		else if (isAstBlock(instruction)) {
+		else if (Script.isBlock(instruction)) {
 			generateBlock(instruction, page.content, page);
 		}
-		else if (isAstScript(instruction)) {
+		else if (Script.isScriptArea(instruction)) {
 			page.script = instruction.content;
 		}
 	}
@@ -76,7 +84,7 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 			for (const aiNode of aiNodes) {
 				if (isAiVarDef(aiNode)) {
 					// generate a page variable of the AiScript variable
-					const aiScriptVar = generatePageVarOfAiScript(aiNode.name);
+					const aiScriptVar = Page.generatePageVarOfAiScript(aiNode.name);
 					page.variables.push(aiScriptVar);
 				}
 			}

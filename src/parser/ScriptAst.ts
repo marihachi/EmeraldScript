@@ -4,90 +4,96 @@ import $, { StringContext } from 'cafy';
 // AST object
 //
 
-export interface AstInstruction {
+export interface Instruction
+{
 	op: string;
 }
 
-// AstMeta
+// MetaInfo
 
-export interface AstMeta extends AstInstruction
+export interface MetaInfo extends Instruction
 {
 	op: 'addMeta';
 	name: string;
 	value: string;
 }
 
-export function isAstMeta(obj: AstInstruction): obj is AstMeta
+export function isMetaInfo(obj: Instruction): obj is MetaInfo
 {
 	return obj.op == 'addMeta';
 }
 
-// AstBlock
+// Block
 
-export interface AstBlock extends AstInstruction
+export interface Block extends Instruction
 {
 	op: 'addBlock';
 	name: string;
-	attrs: AstBlockAttr[];
+	attrs: BlockAttr[];
 }
 
-export function isAstBlock(obj: AstInstruction): obj is AstBlock
+export function isBlock(obj: Instruction): obj is Block
 {
 	return obj.op == 'addBlock';
 }
 
-export interface AstBlockAttr
+export interface BlockAttr
 {
 	name: string;
 	valueType: string;
 	value: string;
 }
 
-export interface AstContainerBlock extends AstBlock
+export interface ContainerBlock extends Block
 {
-	children: AstBlock[];
+	children: Block[];
 }
 
-export interface AstSectionBlock extends AstContainerBlock
+export function isContainerBlock(obj: Block): obj is ContainerBlock
+{
+	return (obj as any).children != null;
+}
+
+export interface SectionBlock extends ContainerBlock
 {
 	name: 'section';
 }
 
-export function isSectionBlock(obj: AstBlock): obj is AstSectionBlock
+export function isSectionBlock(obj: Block): obj is SectionBlock
 {
 	return obj.name == 'section';
 }
 
-export interface AstTextBlock extends AstBlock
+export interface TextBlock extends Block
 {
 	name: 'text';
 	text: string;
 }
 
-export function isTextBlock(obj: AstBlock): obj is AstTextBlock
+export function isTextBlock(obj: Block): obj is TextBlock
 {
 	return obj.name == 'text';
 }
 
-export interface AstInputNumberBlock extends AstBlock
+export interface InputNumberBlock extends Block
 {
 	name: 'inputNumber';
 }
 
-export function isInputNumberBlock(obj: AstBlock): obj is AstInputNumberBlock
+export function isInputNumberBlock(obj: Block): obj is InputNumberBlock
 {
 	return obj.name == 'inputNumber';
 }
 
-// AstScript
+// Script
 
-export interface AstScript extends AstInstruction
+export interface ScriptArea extends Instruction
 {
 	op: 'setAiScript';
 	content: string;
 }
 
-export function isAstScript(obj: AstInstruction): obj is AstScript
+export function isScriptArea(obj: Instruction): obj is ScriptArea
 {
 	return obj.op == 'setAiScript';
 }
@@ -98,7 +104,7 @@ export function isAstScript(obj: AstInstruction): obj is AstScript
 
 const metaDifinisions = ['aligncenter', 'title', 'name'];
 
-export function validateMeta(meta: AstMeta)
+export function validateMeta(meta: MetaInfo)
 {
 	if (!metaDifinisions.some(m => m == meta.name)) {
 		throw `invalid meta type: ${meta.name}`;
@@ -159,7 +165,7 @@ export const blockDifinisions: BlockDifinision[] = [
 	},
 ];
 
-export function validateBlock(block: AstBlock): void
+export function validateBlock(block: Block): void
 {
 	// check block name
 	const blockDef = blockDifinisions.find((def) => block.name == def.name);

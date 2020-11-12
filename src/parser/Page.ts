@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 
-export interface PageObject
+export interface DefinitionData
 {
 	title: string;
 	name: string;
