@@ -26,8 +26,11 @@ export function generatePage(instructions: AstInstruction[]): PageObject
 			const variableAttr = instruction.attrs.find(attr => attr.name == 'variable')!;
 			const defaultAttr = instruction.attrs.find(attr => attr.name == 'default')!;
 			const titleAttr = instruction.attrs.find(attr => attr.name == 'title');
-			// TODO: validation
-			const block = generatePageNumberInputBlock(variableAttr.value, parseInt(defaultAttr.value), titleAttr ? titleAttr.value : '');
+			const block = generatePageNumberInputBlock(
+				variableAttr.value,
+				parseInt(defaultAttr.value, 10),
+				titleAttr ? titleAttr.value : ''
+			);
 			parentContainer.push(block);
 		}
 	}

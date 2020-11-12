@@ -1,3 +1,4 @@
+import $, { StringContext } from 'cafy';
 
 //
 // AST object
@@ -118,7 +119,7 @@ interface BlockAttrDifinision
 {
 	name: string;
 	required: boolean;
-	valueType: string;
+	validator: StringContext;
 }
 
 export const blockDifinisions: BlockDifinision[] = [
@@ -128,7 +129,7 @@ export const blockDifinisions: BlockDifinision[] = [
 			{
 				name: 'title',
 				required: true,
-				valueType: 'string'
+				validator: $.str
 			}
 		]
 	},
@@ -142,17 +143,17 @@ export const blockDifinisions: BlockDifinision[] = [
 			{
 				name: 'variable',
 				required: true,
-				valueType: 'string'
+				validator: $.str
 			},
 			{
 				name: 'default',
 				required: true,
-				valueType: 'string'
+				validator: $.str.match(/^[0-9]+$/)
 			},
 			{
 				name: 'title',
 				required: false,
-				valueType: 'string'
+				validator: $.str
 			}
 		]
 	},
@@ -172,8 +173,9 @@ export function validateBlock(block: AstBlock): void
 		if (!attrDef) {
 			throw `${attr.name} attribute is invalid for section block`;
 		}
-		if (attrDef.valueType != attr.valueType) {
-			throw `${attrDef.name} attribute: must be of ${attrDef.valueType} type`;
+
+		if (attrDef.validator.nok(attr.value)) {
+			throw `${attrDef.name} attribute of ${block.name} block: invalid value "${attr.value}"`;
 		}
 	}
 

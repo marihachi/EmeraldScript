@@ -23,14 +23,15 @@
   },
   "dependencies": {
     "@syuilo/aiscript": "^0.11.1",
-    "@types/pegjs": "0.10.x",
-    "@types/semver": "7.3.x",
+    "cafy": "15.2.1",
     "corekey": "1.0.x",
     "semver": "7.3.x",
     "uuid": "8.3.x"
   },
   "devDependencies": {
     "@types/node": "14.14.x",
+    "@types/pegjs": "0.10.x",
+    "@types/semver": "7.3.x",
     "@types/uuid": "8.3.x",
     "mkdirp": "1.0.x",
     "pegjs": "0.10.x",
