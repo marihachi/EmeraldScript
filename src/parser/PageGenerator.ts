@@ -78,20 +78,28 @@ export function generatePage(instructions: Script.Instruction[]): Page.Definitio
 		}
 	}
 
-	if (page.script) {
-		try {
-			const aiNodes: AiNode[] = parseAiScript(page.script);
-			for (const aiNode of aiNodes) {
-				if (isAiVarDef(aiNode)) {
-					// generate a page variable of the AiScript variable
-					const aiScriptVar = Page.generatePageVarOfAiScript(aiNode.name);
-					page.variables.push(aiScriptVar);
-				}
+	try {
+		const aiNodes: AiNode[] = parseAiScript(page.script);
+		for (const aiNode of aiNodes) {
+			if (isAiVarDef(aiNode)) {
+				// generate a page variable of the AiScript variable
+				const aiScriptVar = Page.generatePageVarOfAiScript(aiNode.name);
+				page.variables.push(aiScriptVar);
 			}
 		}
-		catch (err) {
-		}
 	}
+	catch (err) {
+	}
+
+	// code generation
+	let generatedCode = '\n';
+	generatedCode += '@_generated_onPagesUpdated(name, value) {\n';
+	for (const variable of []) { // TODO
+		generatedCode += `? (name = "${variable}") { ${variable} <- value }\n`;
+	}
+	generatedCode += '}\n';
+	generatedCode += 'MkPages:updated(_generated_onPagesUpdated)\n';
+	page.script += generatedCode;
 
 	return page;
 }
