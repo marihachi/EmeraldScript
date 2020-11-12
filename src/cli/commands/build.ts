@@ -3,6 +3,7 @@ import fs from 'fs';
 import { promisify } from 'util';
 import EmsParser from '../../parser/EmsParser';
 import { showHelp } from '../misc/commandUtil';
+import { PageObject } from '../../parser/Page';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -48,15 +49,22 @@ export default async function(args: string[])
 	}
 
 	const emsParser = new EmsParser();
-	const aisAst = emsParser.parse(scriptData);
+	let page: PageObject;
+	try {
+		page = emsParser.parse(scriptData);
+	}
+	catch (err) {
+		console.log('[SyntaxError]', err);
+		return;
+	}
 
 	try {
-		await writeFile(outputFile, JSON.stringify(aisAst));
+		await writeFile(outputFile, JSON.stringify(page));
 	}
 	catch (err) {
 		throw 'failed to generate the page file';
 	}
 
-	console.log('An page file has been generated:'); 
+	console.log('An page file has been generated:');
 	console.log(outputFile); 
 }

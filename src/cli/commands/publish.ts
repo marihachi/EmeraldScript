@@ -38,30 +38,30 @@ export default async function(args: string[])
 	const app = new App(config.account.host, config.account.secret);
 	const account = new Account(app, config.account.userToken);
 
-	let aiastJson;
+	let pageJson;
 	try {
-		aiastJson = await readFile(inputFile, { encoding: 'utf8' });
+		pageJson = await readFile(inputFile, { encoding: 'utf8' });
 	}
 	catch (err) {
 		throw 'failed to open the input file';
 	}
 	
-	let aiast: any;
+	let pageAst: any;
 	try {
-		aiast = JSON.parse(aiastJson);
+		pageAst = JSON.parse(pageJson);
 	}
 	catch (err) {
 	}
 
-	if (!aiast || !aiast.content || !aiast.variables) {
+	if (!pageAst || !pageAst.content || !pageAst.variables) {
 		throw 'the input file is invalid format';
 	}
 
-	if (aiast.script == null) {
-		aiast.script = '';
+	if (pageAst.script == null) {
+		pageAst.script = '';
 	}
 
-	const page = await account.request('pages/create', aiast);
+	const page = await account.request('pages/create', pageAst);
 
 	if (page.error) {
 		if (page.error.kind == 'server' && page.error.info) {

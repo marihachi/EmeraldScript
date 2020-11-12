@@ -35,5 +35,5 @@ async function entryPoint() {
 }
 entryPoint()
 .catch(err => {
-	console.log('error:', err);
+	console.log('[error]', err);
 });
