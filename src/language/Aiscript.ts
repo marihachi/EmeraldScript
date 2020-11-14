@@ -1,4 +1,4 @@
-export interface Node {
+export interface INode {
 	type: string;
 }
 
@@ -6,14 +6,14 @@ export interface Node {
 // Variable
 //
 
-export interface VariableDef extends Node {
+export interface IVariableDef extends INode {
 	type: 'def';
 	name: string;
-	expr: Node;
+	expr: INode;
 	mut: boolean;
 }
 
-export function isVariableDef(obj: Node): obj is VariableDef
+export function isVariableDef(obj: INode): obj is IVariableDef
 {
 	return obj.type == 'def';
 }

@@ -58,7 +58,7 @@ export function generatePage(instructions: Emerald.Instruction[]): IPage
 	}
 
 	try {
-		const aiNodes: Ai.Node[] = parseAiScript(page.script);
+		const aiNodes: Ai.INode[] = parseAiScript(page.script);
 		for (const aiNode of aiNodes) {
 			if (Ai.isVariableDef(aiNode)) {
 				// generate a page variable of the AiScript variable
