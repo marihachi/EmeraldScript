@@ -38,6 +38,7 @@
     "typescript": "4.0.x"
   },
   "files": [
-    "built"
+		"built",
+		"examples"
   ]
 }
