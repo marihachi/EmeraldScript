@@ -1,38 +1,14 @@
 import $, { StringContext } from 'cafy';
+import * as Emerald from '.';
 
-//
-// AST object
-//
-
-export interface Instruction
-{
-	op: string;
-}
-
-// MetaInfo
-
-export interface MetaInfo extends Instruction
-{
-	op: 'addMeta';
-	name: string;
-	value: string;
-}
-
-export function isMetaInfo(obj: Instruction): obj is MetaInfo
-{
-	return obj.op == 'addMeta';
-}
-
-// Block
-
-export interface Block extends Instruction
+export interface Block extends Emerald.Instruction
 {
 	op: 'addBlock';
 	name: string;
 	attrs: BlockAttr[];
 }
 
-export function isBlock(obj: Instruction): obj is Block
+export function isBlock(obj: Emerald.Instruction): obj is Block
 {
 	return obj.op == 'addBlock';
 }
@@ -84,36 +60,6 @@ export function isInputNumberBlock(obj: Block): obj is InputNumberBlock
 {
 	return obj.name == 'inputNumber';
 }
-
-// Script
-
-export interface ScriptArea extends Instruction
-{
-	op: 'setAiScript';
-	content: string;
-}
-
-export function isScriptArea(obj: Instruction): obj is ScriptArea
-{
-	return obj.op == 'setAiScript';
-}
-
-//
-// Meta
-//
-
-const metaDifinisions = ['aligncenter', 'title', 'name'];
-
-export function validateMeta(meta: MetaInfo)
-{
-	if (!metaDifinisions.some(m => m == meta.name)) {
-		throw `invalid meta type: ${meta.name}`;
-	}
-}
-
-//
-// Block
-//
 
 interface BlockDifinision
 {

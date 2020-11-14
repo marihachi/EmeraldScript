@@ -1,9 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
-import EmsParser from '../../parser/EmsParser';
+import * as Emerald from '../../language/Emerald';
 import { showHelp } from '../misc/commandUtil';
-import * as Page from '../../parser/Page';
 
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
@@ -40,18 +39,18 @@ export default async function(args: string[])
 		outputFile = path.resolve(outputFile);
 	}
 
-	let scriptData;
+	let emeraldScriptCode;
 	try {
-		scriptData = await readFile(inputFile, { encoding: 'utf8' });
+		emeraldScriptCode = await readFile(inputFile, { encoding: 'utf8' });
 	}
 	catch (err) {
 		throw 'failed to open the input file';
 	}
 
-	const emsParser = new EmsParser();
-	let page: Page.DefinitionData;
+	const transpiler = new Emerald.HpmlTranspiler();
+	let hpmlCode: string;
 	try {
-		page = emsParser.parse(scriptData);
+		hpmlCode = transpiler.transpile(emeraldScriptCode);
 	}
 	catch (err) {
 		console.log('[SyntaxError]', err);
@@ -59,7 +58,7 @@ export default async function(args: string[])
 	}
 
 	try {
-		await writeFile(outputFile, JSON.stringify(page));
+		await writeFile(outputFile, hpmlCode);
 	}
 	catch (err) {
 		throw 'failed to generate the page file';
