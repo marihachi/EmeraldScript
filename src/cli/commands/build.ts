@@ -47,10 +47,10 @@ export default async function(args: string[])
 		throw 'failed to open the input file';
 	}
 
-	const transpiler = new Emerald.HpmlTranspiler();
+	const compiler = new Emerald.Compiler();
 	let hpmlCode: string;
 	try {
-		hpmlCode = transpiler.transpile(emeraldScriptCode);
+		hpmlCode = compiler.compile(emeraldScriptCode);
 	}
 	catch (err) {
 		console.log('[SyntaxError]', err);
