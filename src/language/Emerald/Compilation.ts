@@ -25,7 +25,7 @@ export class Compiler
 		}
 
 		// prepare context
-		const ctx: Emerald.EvaluationContext = {
+		const ctx: Emerald.ProcessingContext = {
 			page: Hpml.generatePage(),
 			parentBlockContainer: [],
 			childBlockContainer: [],
@@ -33,9 +33,9 @@ export class Compiler
 		};
 		ctx.parentBlockContainer = ctx.page.content;
 
-		// evaluate instructions
+		// process instructions
 		for (const instruction of instructions) {
-			Emerald.evaluate(instruction, ctx);
+			Emerald.process(instruction, ctx);
 		}
 
 		let aiNodes: Ai.Node[];

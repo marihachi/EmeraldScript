@@ -4,14 +4,11 @@ start = parts
 // parts
 //
 
-parts = spacing* metas:defineMetaPart spacing* blocks:blockPart spacing* script:scriptPart? spacing* {
-	const ast = [
-		...metas,
-		...blocks
-	];
-	if (script) {
-		ast.push(script);
-	}
+parts = spacing* metas:defineMetaPart? spacing* blocks:blockPart? spacing* script:scriptPart? spacing* {
+	const ast = [];
+	if (metas) ast.push(...metas);
+	if (blocks) ast.push(...blocks);
+	if (script) ast.push(script);
 	return ast;
 }
 
@@ -24,11 +21,11 @@ defineMetaPart
 	/ "" { return []; }
 
 defineMeta_A = "#" name:$(defineMeta_nameChar+) space+ content:$(defineMeta_contentChar+) {
-	return { op: 'addMeta', name: name.toLowerCase(), value: content };
+	return { type: 'meta', name: name.toLowerCase(), value: content };
 }
 
 defineMeta_B = "#" name:$(defineMeta_nameChar+) {
-	return { op: 'addMeta', name: name.toLowerCase(), value: null };
+	return { type: 'meta', name: name.toLowerCase(), value: null };
 }
 
 defineMeta_contentChar = !(lineBreak) . { return text(); }
@@ -50,7 +47,7 @@ block = sectionBlock / textBlock / inputNumberBlock
 // section block
 
 sectionBlock = attrs:sectionBlock_begin spacing* blocks:blockArea spacing* sectionBlock_end {
-	return { op: 'addBlock', name: 'section', attrs: attrs, children: blocks };
+	return { type: 'block', name: 'section', attrs: attrs, children: blocks };
 }
 
 sectionBlock_begin = "<section" attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
@@ -61,7 +58,7 @@ sectionBlock_end = "</section>"
 
 textBlock = attrs:textBlock_begin spacing* text:$(textBlock_contentChar*) spacing* textBlock_end {
 	text = text.replace(/\t/, '');
-	return { op: 'addBlock', name: 'text', attrs, text };
+	return { type: 'block', name: 'text', attrs, text };
 }
 
 textBlock_contentChar = !(textBlock_end) c:. { return c; }
@@ -73,7 +70,7 @@ textBlock_end = "</text>"
 // inputNumber block
 
 inputNumberBlock = attrs:inputNumberBlock_begin spacing* blocks:blockArea spacing* inputNumberBlock_end {
-	return { op: 'addBlock', name: 'inputNumber', attrs: attrs, children: blocks };
+	return { type: 'block', name: 'inputNumber', attrs: attrs, children: blocks };
 }
 
 inputNumberBlock_begin = "<inputNumber" attrs2:(spacing+ attrs:blockAttrs spacing* { return attrs; })? ">" { return attrs2 || []; }
@@ -104,7 +101,7 @@ blockAttr_idChar = !(lineBreak / space / "=") . { return text(); }
 
 scriptPart = scriptBlock_begin content:scriptBlock_content scriptBlock_end {
 	return {
-		op: 'setAiScript',
+		type: 'script',
 		content: content
 	};
 }

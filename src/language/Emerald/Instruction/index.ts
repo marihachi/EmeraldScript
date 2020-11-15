@@ -2,30 +2,30 @@ import * as Emerald from '..';
 
 export interface Instruction
 {
-	op: string;
+	type: string;
 }
 
 export interface Meta extends Emerald.Instruction
 {
-	op: 'addMeta';
+	type: 'meta';
 	name: string;
 	value: string;
 }
 
 export function isMeta(obj: Emerald.Instruction): obj is Meta
 {
-	return obj.op == 'addMeta';
+	return obj.type == 'meta';
 }
 
 export interface AiScriptArea extends Emerald.Instruction
 {
-	op: 'setAiScript';
+	type: 'script';
 	content: string;
 }
 
 export function isAiScriptArea(obj: Emerald.Instruction): obj is Emerald.AiScriptArea
 {
-	return obj.op == 'setAiScript';
+	return obj.type == 'script';
 }
 
 export * from './Block';

@@ -1,6 +1,57 @@
 import $, { StringContext } from 'cafy';
 import * as Emerald from '..';
 import * as Hpml from '../../Hpml';
+import { printDebug } from '../../../debug';
+
+export function processBlock(block: Emerald.Block, ctx: Emerald.ProcessingContext): void
+{
+	// check block name
+	const blockDef = Emerald.blockDifinisions.find((def) => block.name == def.name);
+	if (!blockDef) {
+		throw `processing error: ${block.name} block is not supported`;
+	}
+
+	// check name and type of attributes
+	for (const attr of block.attrs) {
+		const attrDef = blockDef.attrs.find(at => at.name == attr.name);
+		if (!attrDef) {
+			throw `processing error: ${attr.name} attribute is invalid for ${block.name} block`;
+		}
+
+		if (attrDef.validator.nok(attr.value)) {
+			throw `processing error: invalid value "${attr.value}" is invalid value for ${attr.name} attribute of ${block.name} block`;
+		}
+	}
+
+	// check required attributes
+	const requiredAttrDefs = blockDef.attrs.filter(def => def.required);
+	for (const attrDef of requiredAttrDefs) {
+		const attr = block.attrs.find(at => at.name == attrDef.name);
+		if (!attr) {
+			throw `${attrDef.name} attribute is required for ${blockDef.name} block`;
+		}
+	}
+
+	// process inner blocks
+	if (Emerald.isContainerBlock(block)) {
+		printDebug('the block is container');
+		const parentContainer = ctx.parentBlockContainer;
+		ctx.parentBlockContainer = [];
+		printDebug('begin children processing');
+		for (const child of block.children) {
+			Emerald.process(child, ctx);
+		}
+		printDebug('end children processing');
+		ctx.childBlockContainer = ctx.parentBlockContainer;
+		ctx.parentBlockContainer = parentContainer;
+	}
+
+	printDebug(`block type: ${block.name}`);
+	// process the setBlock block
+	blockDef.process(block, ctx);
+}
+
+// block difinision
 
 export interface BlockDifinision
 {
@@ -10,7 +61,7 @@ export interface BlockDifinision
 		required: boolean;
 		validator: StringContext;
 	}[];
-	evaluate: (block: Block, ctx: Emerald.EvaluationContext) => void;
+	process: (block: Block, ctx: Emerald.ProcessingContext) => void;
 }
 
 export const blockDifinisions: BlockDifinision[] = [];
@@ -19,7 +70,7 @@ export const blockDifinisions: BlockDifinision[] = [];
 
 export interface Block extends Emerald.Instruction
 {
-	op: 'addBlock';
+	type: 'block';
 	name: string;
 	attrs: {
 		name: string;
@@ -30,7 +81,7 @@ export interface Block extends Emerald.Instruction
 
 export function isBlock(obj: Emerald.Instruction): obj is Emerald.Block
 {
-	return obj.op == 'addBlock';
+	return obj.type == 'block';
 }
 
 export interface ContainerBlock extends Emerald.Block
@@ -64,7 +115,7 @@ const sectionBlockDef: BlockDifinision = {
 			validator: $.str
 		}
 	],
-	evaluate(block: Emerald.Block, ctx: Emerald.EvaluationContext): void
+	process(block: Emerald.Block, ctx: Emerald.ProcessingContext): void
 	{
 		const section = (block as Emerald.SectionBlock);
 		const titleAttr = section.attrs.find(attr => attr.name == 'title')!;
@@ -90,7 +141,7 @@ export function isTextBlock(obj: Emerald.Block): obj is Emerald.TextBlock
 const textBlockDef: BlockDifinision = {
 	name: 'text',
 	attrs: [],
-	evaluate(block: Emerald.Block, ctx: Emerald.EvaluationContext): void
+	process(block: Emerald.Block, ctx: Emerald.ProcessingContext): void
 	{
 		const textBlock = (block as Emerald.TextBlock);
 		const hpmlBlock = Hpml.generateTextBlock(textBlock.text);
@@ -130,7 +181,7 @@ const inputNumberBlockDef: BlockDifinision = {
 			validator: $.str
 		}
 	],
-	evaluate(block: Emerald.Block, ctx: Emerald.EvaluationContext): void
+	process(block: Emerald.Block, ctx: Emerald.ProcessingContext): void
 	{
 		const inputNumberBlock = (block as Emerald.InputNumberBlock);
 		const variableAttr = inputNumberBlock.attrs.find(attr => attr.name == 'variable')!;
