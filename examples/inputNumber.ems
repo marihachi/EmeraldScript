@@ -1,0 +1,9 @@
+#title Hello world
+
+<section title="Input number">
+	<inputNumber variable="num" default="0"></inputNumber>
+</section>
+
+<script>
+$num <- 0
+</script>
