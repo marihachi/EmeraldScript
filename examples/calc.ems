@@ -1,0 +1,22 @@
+#title Calc
+
+<inputNumber variable="a" default="0"></inputNumber>
+<inputNumber variable="b" default="0"></inputNumber>
+
+<section title="計算結果">
+	{result}
+</section>
+
+<script>
+$a <- 0
+$b <- 0
+$result <- 0
+
+@add(left, right) {
+	(left + right)
+}
+
+Async:interval(30, @() {
+	result <- add(a, b)
+})
+</script>

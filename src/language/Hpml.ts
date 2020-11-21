@@ -1,17 +1,13 @@
 import { v4 as uuid } from 'uuid';
 
+//
 // Block
-
-export interface Block
-{
-	id: string;
-	type: string;
-}
+//
 
 // SectionBlock
 
-export interface SectionBlock extends Block
-{
+export type SectionBlock = {
+	id: string;
 	type: 'section';
 	title: string;
 	children: Block[];
@@ -29,8 +25,8 @@ export function generateSectionBlock(title: string, children: Block[]): SectionB
 
 // TextBlock
 
-export interface TextBlock extends Block
-{
+export type TextBlock = {
+	id: string;
 	type: 'text';
 	text: string;
 }
@@ -46,8 +42,8 @@ export function generateTextBlock(text: string): TextBlock
 
 // NumberInputBlock
 
-export interface NumberInputBlock extends Block
-{
+export type NumberInputBlock = {
+	id: string;
 	type: 'numberInput';
 	default: number;
 	name: string;
@@ -65,19 +61,18 @@ export function generateNumberInputBlock(variable: string, defaultValue: number,
 	};
 }
 
-// Variable
+export type Block
+	= SectionBlock | TextBlock | NumberInputBlock;
 
-export interface Variable
-{
+//
+// Variable
+//
+
+export type AiScriptVariable = {
 	id: string;
-	type: string;
+	type: 'aiScriptVar';
 	name: string;
 	value: string;
-}
-
-export interface AiScriptVariable extends Variable
-{
-	type: 'aiScriptVar';
 }
 
 export function generateAiScriptVariable(name: string): AiScriptVariable
@@ -90,17 +85,19 @@ export function generateAiScriptVariable(name: string): AiScriptVariable
 	};
 }
 
+export type Variable
+	= AiScriptVariable;
+
 // Page
 
-export interface Page
-{
+export type Page = {
 	title: string;
 	name: string;
 	alignCenter?: boolean;
 	content: Block[];
 	variables: Variable[];
 	script: string;
-}
+};
 
 export function generatePage(title?: string, name?: string): Page
 {

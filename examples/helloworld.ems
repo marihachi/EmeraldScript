@@ -1,11 +1,8 @@
 #title Hello world
 
 <section title="Message">
-	<text>
-		Hi @{name}!
-
-		{message}
-	</text>
+	Hi @{name}!
+	{message}
 </section>
 
 <script>
