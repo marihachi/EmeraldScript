@@ -1,6 +1,6 @@
 {
   "name": "misskey-em",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "A CLI app of the text based script language for Misskey Pages",
   "scripts": {
     "build": "npm run peg && npm run tsc",
@@ -38,7 +38,7 @@
     "typescript": "4.0.x"
   },
   "files": [
-		"built",
-		"examples"
+    "built",
+    "examples"
   ]
 }
