@@ -3,7 +3,7 @@ import fs from 'fs';
 import { promisify } from 'util';
 import path from 'path';
 import Config from '../misc/Config';
-import inputLine from '../misc/inputLine';
+import { inputLine } from '../misc/consoleUtil';
 import semver from 'semver';
 
 import {

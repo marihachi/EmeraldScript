@@ -1,0 +1,14 @@
+#title Hello world
+
+<section title="Message">
+	Hi @{name}!
+	{message}
+</section>
+
+<script>
+
+#name = USER_USERNAME
+
+#message = "This message is displayed by AiScript!"
+
+</script>

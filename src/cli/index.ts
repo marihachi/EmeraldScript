@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 import { showHelp, showVersion } from './misc/commandUtil';
+import newFile from './commands/new';
 import build from './commands/build';
 import publish from './commands/publish';
 import login from './commands/login';
@@ -20,20 +21,25 @@ async function entryPoint() {
 		return;
 	}
 
-	if (args[0] == 'build') {
+	switch (args[0]) {
+	case 'new':
+		await newFile(args.slice(1));
+		break;
+	case 'build':
 		await build(args.slice(1));
-	}
-	else if (args[0] == 'login') {
+		break;
+	case 'login':
 		await login(args.slice(1));
-	}
-	else if (args[0] == 'publish') {
+		break;
+	case 'publish':
 		await publish(args.slice(1));
-	}
-	else {
+		break;
+	default:
 		showHelp();
+		break;
 	}
 }
 entryPoint()
 .catch(err => {
-	console.log('error:', err);
+	console.log('[error]', err);
 });

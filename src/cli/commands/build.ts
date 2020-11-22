@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
-import EmsParser from '../../parser/EmsParser';
+import * as Emerald from '../../language/Emerald';
 import { showHelp } from '../misc/commandUtil';
 
 const readFile = promisify(fs.readFile);
@@ -33,30 +33,36 @@ export default async function(args: string[])
 		}
 		const fileNameWithoutExt = fileNameSplited.join('.');
 
-		outputFile = path.join(inputDir, `${fileNameWithoutExt}.ai.json`);
+		outputFile = path.join(inputDir, `${fileNameWithoutExt}.page.json`);
 	}
 	if (!path.isAbsolute(outputFile)) {
 		outputFile = path.resolve(outputFile);
 	}
 
-	let scriptData;
+	let emeraldScriptCode;
 	try {
-		scriptData = await readFile(inputFile, { encoding: 'utf8' });
+		emeraldScriptCode = await readFile(inputFile, { encoding: 'utf8' });
 	}
 	catch (err) {
 		throw 'failed to open the input file';
 	}
 
-	const emsParser = new EmsParser();
-	const aisAst = emsParser.parse(scriptData);
-
+	let hpmlCode: string;
 	try {
-		await writeFile(outputFile, JSON.stringify(aisAst));
+		hpmlCode = Emerald.compile(emeraldScriptCode);
 	}
 	catch (err) {
-		throw 'failed to generate the AiScript file';
+		console.log('[SyntaxError]', err);
+		return;
 	}
 
-	console.log('An AiScript file has been generated:'); 
+	try {
+		await writeFile(outputFile, hpmlCode);
+	}
+	catch (err) {
+		throw 'failed to generate the page file';
+	}
+
+	console.log('An page file has been generated:');
 	console.log(outputFile); 
 }
