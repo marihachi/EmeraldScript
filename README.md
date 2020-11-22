@@ -17,7 +17,7 @@ $ npx em login
 comming soon.
 
 Please see a basic example below:  
-https://github.com/marihachi/EmeraldScript/blob/master/example1.ems
+https://github.com/marihachi/EmeraldScript/tree/master/examples
 
 ## Usage
 ### 1. Log in to Misskey
@@ -27,12 +27,12 @@ $ em login
 
 ### 2. Compile your EmeraldScript file
 ```
-$ em build scriptFile.ems scriptFile.ai.json
+$ em build scriptFile.ems scriptFile.page.json
 ```
 
-### 3. Publish the page to Misskey
+### 3. Publish the page file to Misskey
 ```
-$ em publish scriptFile.ai.json
+$ em publish scriptFile.page.json
 ```
 
 Enjoy!
