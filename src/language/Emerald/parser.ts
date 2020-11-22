@@ -1,7 +1,7 @@
 import { Parser, ParserOptions, PegjsError } from 'pegjs';
 import { Node } from './node';
 
-const internalParser: Parser = require('./internalParser.js');
+const internalParser: Parser = require('./syntax.js');
 
 export function parse(input: string, options: ParserOptions): Node[]
 {

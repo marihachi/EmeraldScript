@@ -1,7 +1,6 @@
-import { printDebug } from '../../Debug';
-import * as Hpml from '../Hpml';
-import { PropDef, propDefs } from './block';
-import { BlockNode, Node } from './node';
+import { printDebug } from '../../util';
+import * as Hpml from '../hpml';
+import { BlockNode, Node, BlockProp, blockProps } from './node';
 
 export class ProcessingContext
 {
@@ -16,30 +15,30 @@ export class ProcessingContext
 	}
 }
 
-function processProp(node: BlockNode, defs: PropDef[])
+function processProp(node: BlockNode, props: BlockProp[]): void
 {
 	// check name and type of property
 	for (const [propName, propValue] of node.props) {
-		const propDef = defs.find(p => p.name == propName);
-		if (!propDef) {
+		const prop = props.find(p => p.name == propName);
+		if (!prop) {
 			throw `${propName} property is invalid for ${node.name} block`;
 		}
 
-		if (propDef.validator.nok(propValue)) {
+		if (prop.validator.nok(propValue)) {
 			throw `"${propValue}" is invalid value for ${propName} property of ${node.name} block`;
 		}
 	}
 
-	for (const propDef of defs) {
-		const hasProp = node.props.has(propDef.name);
-		if (propDef.required) {
+	for (const prop of props) {
+		const hasProp = node.props.has(prop.name);
+		if (prop.required) {
 			if (!hasProp) {
-				throw `${propDef.name} property is required for ${node.name} block`;
+				throw `${prop.name} property is required for ${node.name} block`;
 			}
 		}
 		else {
 			if (!hasProp) {
-				node.props.set(propDef.name, propDef.defaultValue);
+				node.props.set(prop.name, prop.defaultValue);
 			}
 		}
 	}
@@ -66,14 +65,14 @@ export function processNode(node: Node, ctx: ProcessingContext): void
 
 		switch (node.name) {
 			case 'section': {
-				processProp(node, propDefs.section);
+				processProp(node, blockProps.section);
 				const titleProp = node.props.get('title')!;
 				const hpmlBlock = Hpml.generateSectionBlock(titleProp, ctx.childBlockContainer);
 				ctx.parentBlockContainer.push(hpmlBlock);
 				break;
 			}
 			case 'inputNumber': {
-				processProp(node, propDefs.inputNumber);
+				processProp(node, blockProps.inputNumber);
 				const variableProp = node.props.get('variable')!;
 				const defaultProp = node.props.get('default')!;
 				const titleProp = node.props.get('title')!;
@@ -125,7 +124,7 @@ export function processNode(node: Node, ctx: ProcessingContext): void
 		}
 	}
 	else if (node.type == 'script') {
-		printDebug('instruction type: set AiScript');
+		printDebug('node type: set AiScript');
 
 		ctx.page.script = node.content;
 	}

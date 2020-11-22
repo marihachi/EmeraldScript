@@ -1,10 +1,9 @@
 import { parse as parseAiScript } from '@syuilo/aiscript';
 import * as AiNode from '@syuilo/aiscript/built/node';
 import * as AiValue from '@syuilo/aiscript/built/interpreter/value';
-import * as Hpml from '../Hpml';
+import * as Hpml from '../hpml';
 import { parse as parseEmeraldScript } from './parser';
 import { ProcessingContext, processNode } from './processing';
-import { printDebug } from '../../debug';
 
 function generateCode(aiNodes: AiNode.Node[], ctx: ProcessingContext)
 {

@@ -1,4 +1,4 @@
-#title Hello world
+#title Input Number
 
 <section title="Input number">
 	<inputNumber variable="num" default="0"></inputNumber>

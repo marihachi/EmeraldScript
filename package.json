@@ -5,8 +5,8 @@
   "scripts": {
     "build": "npm run peg && npm run tsc",
     "build-debug": "npm run peg-debug && npm run tsc",
-    "peg": "mkdirp ./built/language/Emerald && pegjs -o built/language/Emerald/internalParser.js src/language/Emerald/internalParser.pegjs",
-    "peg-debug": "mkdirp ./built/language/Emerald && pegjs -o built/language/Emerald/internalParser.js --trace src/language/Emerald/internalParser.pegjs",
+    "peg": "mkdirp ./built/language/Emerald && pegjs -o built/language/Emerald/syntax.js src/language/Emerald/syntax.pegjs",
+    "peg-debug": "mkdirp ./built/language/Emerald && pegjs -o built/language/Emerald/syntax.js --trace src/language/Emerald/syntax.pegjs",
     "tsc": "tsc"
   },
   "bin": {

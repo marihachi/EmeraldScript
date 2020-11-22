@@ -51,7 +51,6 @@ sectionBlock = attrs:sectionBlock_begin spacing* children:contentArea spacing* s
 	for (const attr of attrs) {
 		attrMap.set(attr.key, attr.value);
 	}
-	console.log('children:', children);
 	return { type: 'block', name: 'section', props: attrMap, children: children || [] };
 }
 
